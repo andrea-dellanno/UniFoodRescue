@@ -493,9 +493,9 @@ Nota: in Django la relazione molti-a-molti tra `ProdottoAlimentare` e `Allergene
 ```
 
 
-## 9. Vincoli del sistema
+## 7. Vincoli del sistema
 
-### 9.1 Vincoli sulla generalizzazione
+### 7.1 Vincoli sulla generalizzazione
 
 - Ogni `Utente` deve essere associato a uno e un solo profilo tra `Studente`, `OperatoreMensa` e `Amministratore`.
 - `Studente.utente_id` deve essere univoco.
@@ -506,7 +506,7 @@ Nota: in Django la relazione molti-a-molti tra `ProdottoAlimentare` e `Allergene
   - `operatore_mensa`
   - `amministratore`
 
-### 9.2 Vincoli su Mensa e OperatoreMensa
+### 7.2 Vincoli su Mensa e OperatoreMensa
 
 - Ogni `OperatoreMensa` deve essere associato a una `Mensa`.
 - Una `Mensa` può avere più operatori.
@@ -514,7 +514,7 @@ Nota: in Django la relazione molti-a-molti tra `ProdottoAlimentare` e `Allergene
 - Una mensa inattiva non può pubblicare nuovi lotti disponibili.
 - L'orario di chiusura deve essere successivo all'orario di apertura.
 
-### 9.3 Vincoli su prodotti, categorie e allergeni
+### 7.3 Vincoli su prodotti, categorie e allergeni
 
 - Ogni `ProdottoAlimentare` deve appartenere a una categoria.
 - Una categoria può contenere molti prodotti.
@@ -534,7 +534,7 @@ ProdottoAllergene(prodotto_id, allergene_id) UNIQUE
 ProdottoAlimentare(categoria_id, nome) UNIQUE
 ```
 
-### 9.4 Vincoli sui lotti invenduti
+### 7.4 Vincoli sui lotti invenduti
 
 - Ogni lotto deve essere associato a una mensa.
 - Ogni lotto deve essere associato a un prodotto alimentare.
@@ -555,7 +555,7 @@ Stati possibili del lotto:
 - `scaduto`
 - `annullato`
 
-### 9.5 Vincoli sulle prenotazioni
+### 7.5 Vincoli sulle prenotazioni
 
 - Ogni prenotazione deve essere associata a uno studente.
 - Ogni prenotazione deve essere associata a un lotto esistente.
@@ -585,7 +585,7 @@ Stati possibili della prenotazione:
 - `ritirata`
 - `scaduta`
 
-### 9.6 Vincoli sui ritiri
+### 7.6 Vincoli sui ritiri
 
 - Ogni ritiro deve riferirsi a una prenotazione.
 - Una prenotazione può avere al massimo un ritiro.
@@ -600,7 +600,7 @@ Esiti possibili del ritiro:
 - `non_consegnato`
 - `annullato`
 
-### 9.7 Vincoli sulle recensioni
+### 7.7 Vincoli sulle recensioni
 
 - Una recensione deve essere scritta da uno studente.
 - Una recensione deve riferirsi a una mensa.
@@ -617,7 +617,7 @@ voto BETWEEN 1 AND 5
 UNIQUE(prenotazione_id)
 ```
 
-### 9.8 Vincoli sulle segnalazioni
+### 7.8 Vincoli sulle segnalazioni
 
 - Una segnalazione deve essere associata a una prenotazione esistente.
 - L'autore della segnalazione deve essere lo studente che ha effettuato la prenotazione.
@@ -636,9 +636,9 @@ Stati possibili della segnalazione:
 
 ---
 
-## 10. Stati del dominio
+## 9. Stati del dominio
 
-### 10.1 Stati del LottoInvenduto
+### 9.1 Stati del LottoInvenduto
 
 | Stato | Significato |
 |---|---|
@@ -648,7 +648,7 @@ Stati possibili della segnalazione:
 | `scaduto` | La data di scadenza o la fascia utile sono superate. |
 | `annullato` | Il lotto è stato annullato per errore o problema operativo. |
 
-### 10.2 Stati della Prenotazione
+### 9.2 Stati della Prenotazione
 
 | Stato | Significato |
 |---|---|
@@ -657,7 +657,7 @@ Stati possibili della segnalazione:
 | `ritirata` | Lo studente ha ritirato il prodotto e l'operatore ha confermato il ritiro. |
 | `scaduta` | La prenotazione non è stata ritirata entro la fascia prevista. |
 
-### 10.3 Stati della Segnalazione
+### 9.3 Stati della Segnalazione
 
 | Stato | Significato |
 |---|---|
@@ -669,9 +669,9 @@ Stati possibili della segnalazione:
 
 ---
 
-## 11. Scelte progettuali rilevanti
+## 10. Scelte progettuali rilevanti
 
-### 11.1 LottoInvenduto come entità centrale
+### 10.1 LottoInvenduto come entità centrale
 
 La scelta più importante del progetto è modellare il `LottoInvenduto` come entità autonoma.
 
@@ -686,7 +686,7 @@ Questa separazione è fondamentale perché lo stesso prodotto può essere presen
 
 Senza questa distinzione, il sistema sarebbe una semplice lista di pasti. Con questa distinzione, invece, diventa un sistema informativo capace di gestire disponibilità concrete, temporanee e tracciabili.
 
-### 11.2 Separazione tra ProdottoAlimentare e LottoInvenduto
+### 10.2 Separazione tra ProdottoAlimentare e LottoInvenduto
 
 `ProdottoAlimentare` descrive il tipo di alimento.
 
@@ -696,7 +696,7 @@ Questa scelta permette di evitare duplicazioni. Senza questa separazione, ogni v
 
 Separando le due entità, il prodotto viene registrato una sola volta e può essere riutilizzato in più lotti.
 
-### 11.3 Gestione molti-a-molti degli allergeni
+### 10.3 Gestione molti-a-molti degli allergeni
 
 Gli allergeni non vengono salvati come campi booleani dentro `ProdottoAlimentare`.
 
@@ -726,7 +726,7 @@ Questa scelta è migliore perché:
 
 Dal punto di vista del progetto di basi di dati, questa relazione è significativa perché introduce una classica relazione molti-a-molti risolta tramite tabella associativa.
 
-### 11.4 Quantità disponibile salvata nel lotto
+### 10.4 Quantità disponibile salvata nel lotto
 
 Il campo `quantita_disponibile` viene salvato direttamente nel lotto.
 
@@ -742,7 +742,7 @@ Questa scelta richiede un vincolo applicativo: quando si crea o annulla una pren
 
 Per evitare inconsistenze, l'aggiornamento viene gestito in transazione atomica.
 
-### 12.5 Nessuna gestione dei pagamenti online
+### 10.5 Nessuna gestione dei pagamenti online
 
 Il progetto non gestisce pagamenti reali.
 
@@ -759,7 +759,7 @@ Questa scelta evita complessità inutili come:
 
 Il focus rimane sul database e sulla gestione dei processi informativi.
 
-### 12.6 Ritiro come entità autonoma
+### 10.6 Ritiro come entità autonoma
 
 Il ritiro viene modellato come entità separata da `Prenotazione`.
 
@@ -772,7 +772,7 @@ Questa scelta è importante perché:
 
 Se il ritiro fosse solo uno stato della prenotazione, si perderebbero informazioni importanti sull'operatore che ha confermato la consegna e sull'esito del ritiro.
 
-### 12.7 Recensione vincolata al ritiro
+### 10.7 Recensione vincolata al ritiro
 
 La recensione può essere lasciata solo dopo un ritiro completato.
 
@@ -794,7 +794,7 @@ Questa scelta è utile perché una prenotazione identifica già:
 
 In questo modo ogni segnalazione è contestualizzata e può essere analizzata dall'amministratore con tutti i dati necessari.
 
-### 12.9 Ruoli separati e controlli applicativi
+### 10.9 Ruoli separati e controlli applicativi
 
 La presenza di tre ruoli rende il sistema più realistico:
 
@@ -804,7 +804,7 @@ La presenza di tre ruoli rende il sistema più realistico:
 
 Questa separazione permette di dimostrare competenze non solo nella progettazione del database, ma anche nella gestione dei permessi applicativi.
 
-### 12.10 Dashboard e statistiche come valore informativo
+### 10.10 Dashboard e statistiche come valore informativo
 
 La dashboard non è solo un elemento grafico, ma rappresenta una parte importante del sistema informativo.
 
@@ -821,9 +821,9 @@ Questi dati mostrano il valore del sistema: non solo registrare operazioni, ma t
 
 ---
 
-## 13. Query SQL significative
+## 11. Query SQL significative
 
-### 13.1 Ricerca dei lotti disponibili per mensa
+### 11.1 Ricerca dei lotti disponibili per mensa
 
 ```sql
 SELECT l.id, p.nome, l.quantita_disponibile, l.ora_inizio_ritiro, l.ora_fine_ritiro
@@ -835,7 +835,7 @@ AND l.stato = 'disponibile'
 AND l.quantita_disponibile > 0;
 ```
 
-### 13.2 Ricerca dei lotti che non contengono un certo allergene
+### 11.2 Ricerca dei lotti che non contengono un certo allergene
 
 Esempio: prodotti senza lattosio.
 
@@ -854,7 +854,7 @@ AND p.id NOT IN (
 );
 ```
 
-### 13.3 Storico prenotazioni di uno studente
+### 11.3 Storico prenotazioni di uno studente
 
 ```sql
 SELECT pr.id, p.nome, m.nome AS mensa, pr.quantita, pr.stato, pr.data_prenotazione
@@ -866,7 +866,7 @@ WHERE pr.studente_id = 1
 ORDER BY pr.data_prenotazione DESC;
 ```
 
-### 13.4 Prenotazioni da ritirare per una mensa
+### 11.4 Prenotazioni da ritirare per una mensa
 
 ```sql
 SELECT pr.id, u.first_name, u.last_name, p.nome, pr.quantita
@@ -879,7 +879,7 @@ WHERE l.mensa_id = 1
 AND pr.stato = 'attiva';
 ```
 
-### 13.5 Porzioni recuperate per mensa
+### 11.5 Porzioni recuperate per mensa
 
 ```sql
 SELECT m.nome, SUM(pr.quantita) AS porzioni_ritirate
@@ -891,7 +891,7 @@ WHERE pr.stato = 'ritirata'
 GROUP BY m.nome;
 ```
 
-### 13.6 Media recensioni per mensa
+### 11.6 Media recensioni per mensa
 
 ```sql
 SELECT m.nome, AVG(rm.voto) AS voto_medio
@@ -900,7 +900,7 @@ JOIN Mensa m ON rm.mensa_id = m.id
 GROUP BY m.nome;
 ```
 
-### 13.7 Segnalazioni aperte o in carico
+### 11.7 Segnalazioni aperte o in carico
 
 ```sql
 SELECT s.id, s.titolo, s.stato, s.data_apertura
@@ -909,7 +909,7 @@ WHERE s.stato IN ('aperta', 'in_carico')
 ORDER BY s.data_apertura ASC;
 ```
 
-### 13.8 Lotti più richiesti
+### 11.8 Lotti più richiesti
 
 ```sql
 SELECT p.nome, COUNT(pr.id) AS numero_prenotazioni
@@ -920,7 +920,7 @@ GROUP BY p.nome
 ORDER BY numero_prenotazioni DESC;
 ```
 
-### 13.9 Quantità non recuperata stimata
+### 11.9 Quantità non recuperata stimata
 
 ```sql
 SELECT m.nome, SUM(l.quantita_disponibile) AS quantita_non_ritirata
@@ -932,179 +932,9 @@ GROUP BY m.nome;
 
 ---
 
-## 14. Installazione e avvio
 
-### 14.1 Requisiti
 
-- Python 3.10 o superiore
-- pip
-- virtualenv o modulo `venv`
-- Django 4.x
-- SQLite
-
-### 14.2 Clonazione del repository
-
-```bash
-git clone <URL_DEL_REPOSITORY>
-cd UniFoodRescue
-```
-
-### 14.3 Creazione dell'ambiente virtuale
-
-```bash
-python -m venv venv
-```
-
-Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-macOS/Linux:
-
-```bash
-source venv/bin/activate
-```
-
-### 14.4 Installazione dipendenze
-
-```bash
-pip install -r requirements.txt
-```
-
-### 14.5 Applicazione migrazioni
-
-```bash
-python manage.py migrate
-```
-
-### 14.6 Caricamento dati di esempio
-
-```bash
-python manage.py loaddata fixtures/initial_data.json
-```
-
-Il file `fixtures/initial_data.json` contiene dati dimostrativi sufficienti per provare il sistema: utenti, profili, mense, categorie, allergeni, prodotti, lotti, prenotazioni, ritiri, recensioni e segnalazioni.
-
-### 14.7 Avvio del server locale
-
-```bash
-python manage.py runserver
-```
-
-Aprire il browser all'indirizzo:
-
-```text
-http://127.0.0.1:8000/
-```
-
-Area admin Django:
-
-```text
-http://127.0.0.1:8000/admin/
-```
-
-### 14.8 Test automatici
-
-```bash
-python manage.py test
-```
-
-### 14.9 Smoke test rapido
-
-Dopo l'avvio del server:
-
-1. entrare con `mario.rossi`;
-2. aprire il catalogo lotti;
-3. prenotare una quantità disponibile;
-4. uscire e rientrare come operatore `op.mensa.centrale`;
-5. confermare il ritiro;
-6. rientrare come studente e lasciare una recensione;
-7. aprire una segnalazione da una prenotazione;
-8. rientrare come `admin.mensa` e gestire la segnalazione.
-
----
-
-## 15. Credenziali di test
-
-| Ruolo | Username | Password | Note |
-|---|---|---|---|
-| Studente | `mario.rossi` | `Test1234!` | Account studente per prenotazioni e recensioni |
-| Studente | `giulia.bianchi` | `Test1234!` | Account studente alternativo |
-| Operatore mensa | `op.mensa.centrale` | `Test1234!` | Operatore associato alla Mensa Centrale |
-| Operatore mensa | `op.mensa.ingegneria` | `Test1234!` | Operatore associato alla Mensa Ingegneria |
-| Amministratore app | `admin.mensa` | `Test1234!` | Gestione segnalazioni e dati di base |
-| Superuser Django | `admin` | `admin1234` | Accesso a `/admin/` |
-
----
-
-## 16. Dati di esempio
-
-### 16.1 Mense
-
-- Mensa Centrale
-- Mensa Ingegneria
-- Mensa Economia
-
-### 16.2 Categorie
-
-- Primo
-- Secondo
-- Contorno
-- Dolce
-- Bevanda
-- Snack
-
-### 16.3 Allergeni
-
-- Glutine
-- Lattosio
-- Uova
-- Soia
-- Frutta a guscio
-- Sedano
-
-### 16.4 Prodotti alimentari
-
-- Pasta al pomodoro — Primo — contiene glutine
-- Riso con verdure — Primo — vegano
-- Pollo al forno — Secondo
-- Insalata mista — Contorno — vegano
-- Yogurt — Dolce — contiene lattosio
-- Crostata — Dolce — contiene glutine, uova
-
-### 16.5 Lotti invenduti
-
-- Mensa Centrale — Pasta al pomodoro — 8 porzioni — ritiro 17:00-18:00
-- Mensa Centrale — Insalata mista — 5 porzioni — ritiro 17:00-18:00
-- Mensa Ingegneria — Riso con verdure — 6 porzioni — ritiro 18:00-19:00
-- Mensa Economia — Yogurt — 10 porzioni — ritiro 16:30-17:30
-
-### 16.6 Prenotazioni
-
-- Mario Rossi prenota 1 porzione di Pasta al pomodoro
-- Giulia Bianchi prenota 2 porzioni di Riso con verdure
-- Mario Rossi prenota 1 Yogurt
-
-### 16.7 Ritiri
-
-- Mario Rossi ritira Pasta al pomodoro
-- Giulia Bianchi ritira Riso con verdure
-
-### 16.8 Recensioni
-
-- Mario Rossi lascia una recensione alla Mensa Centrale
-- Giulia Bianchi lascia una recensione alla Mensa Ingegneria
-
-### 16.9 Segnalazioni
-
-- Una segnalazione aperta su una prenotazione non trovata
-- Una segnalazione chiusa da `admin.mensa`
-
----
-
-## 17. Struttura del repository
+## 11. Struttura del repository
 
 ```text
 .
