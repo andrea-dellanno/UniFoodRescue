@@ -357,7 +357,7 @@ La soluzione adottata è quindi:
 
 Utente unica + campo ruolo + attributi specifici opzionali
 ```
-## 9. Modello logico relazionale
+## 6. Modello logico relazionale
 
 ```text
 Utente(
@@ -493,9 +493,9 @@ Nota: in Django la relazione molti-a-molti tra `ProdottoAlimentare` e `Allergene
 ```
 
 
-## 10. Vincoli del sistema
+## 9. Vincoli del sistema
 
-### 10.1 Vincoli sulla generalizzazione
+### 9.1 Vincoli sulla generalizzazione
 
 - Ogni `Utente` deve essere associato a uno e un solo profilo tra `Studente`, `OperatoreMensa` e `Amministratore`.
 - `Studente.utente_id` deve essere univoco.
@@ -506,7 +506,7 @@ Nota: in Django la relazione molti-a-molti tra `ProdottoAlimentare` e `Allergene
   - `operatore_mensa`
   - `amministratore`
 
-### 10.2 Vincoli su Mensa e OperatoreMensa
+### 9.2 Vincoli su Mensa e OperatoreMensa
 
 - Ogni `OperatoreMensa` deve essere associato a una `Mensa`.
 - Una `Mensa` può avere più operatori.
@@ -514,7 +514,7 @@ Nota: in Django la relazione molti-a-molti tra `ProdottoAlimentare` e `Allergene
 - Una mensa inattiva non può pubblicare nuovi lotti disponibili.
 - L'orario di chiusura deve essere successivo all'orario di apertura.
 
-### 10.3 Vincoli su prodotti, categorie e allergeni
+### 9.3 Vincoli su prodotti, categorie e allergeni
 
 - Ogni `ProdottoAlimentare` deve appartenere a una categoria.
 - Una categoria può contenere molti prodotti.
@@ -534,7 +534,7 @@ ProdottoAllergene(prodotto_id, allergene_id) UNIQUE
 ProdottoAlimentare(categoria_id, nome) UNIQUE
 ```
 
-### 10.4 Vincoli sui lotti invenduti
+### 9.4 Vincoli sui lotti invenduti
 
 - Ogni lotto deve essere associato a una mensa.
 - Ogni lotto deve essere associato a un prodotto alimentare.
@@ -555,7 +555,7 @@ Stati possibili del lotto:
 - `scaduto`
 - `annullato`
 
-### 10.5 Vincoli sulle prenotazioni
+### 9.5 Vincoli sulle prenotazioni
 
 - Ogni prenotazione deve essere associata a uno studente.
 - Ogni prenotazione deve essere associata a un lotto esistente.
@@ -585,7 +585,7 @@ Stati possibili della prenotazione:
 - `ritirata`
 - `scaduta`
 
-### 10.6 Vincoli sui ritiri
+### 9.6 Vincoli sui ritiri
 
 - Ogni ritiro deve riferirsi a una prenotazione.
 - Una prenotazione può avere al massimo un ritiro.
@@ -600,7 +600,7 @@ Esiti possibili del ritiro:
 - `non_consegnato`
 - `annullato`
 
-### 10.7 Vincoli sulle recensioni
+### 9.7 Vincoli sulle recensioni
 
 - Una recensione deve essere scritta da uno studente.
 - Una recensione deve riferirsi a una mensa.
@@ -610,14 +610,14 @@ Esiti possibili del ritiro:
 - Uno studente non può recensire due volte la stessa prenotazione.
 - La recensione deve riguardare la mensa associata al lotto prenotato.
 
-Vincoli consigliati o implementati:
+ESEMPIO CONCRETO: 
 
 ```text
 voto BETWEEN 1 AND 5
 UNIQUE(prenotazione_id)
 ```
 
-### 10.8 Vincoli sulle segnalazioni
+### 9.8 Vincoli sulle segnalazioni
 
 - Una segnalazione deve essere associata a una prenotazione esistente.
 - L'autore della segnalazione deve essere lo studente che ha effettuato la prenotazione.
@@ -636,9 +636,9 @@ Stati possibili della segnalazione:
 
 ---
 
-## 11. Stati del dominio
+## 10. Stati del dominio
 
-### 11.1 Stati del LottoInvenduto
+### 10.1 Stati del LottoInvenduto
 
 | Stato | Significato |
 |---|---|
@@ -648,7 +648,7 @@ Stati possibili della segnalazione:
 | `scaduto` | La data di scadenza o la fascia utile sono superate. |
 | `annullato` | Il lotto è stato annullato per errore o problema operativo. |
 
-### 11.2 Stati della Prenotazione
+### 10.2 Stati della Prenotazione
 
 | Stato | Significato |
 |---|---|
@@ -657,7 +657,7 @@ Stati possibili della segnalazione:
 | `ritirata` | Lo studente ha ritirato il prodotto e l'operatore ha confermato il ritiro. |
 | `scaduta` | La prenotazione non è stata ritirata entro la fascia prevista. |
 
-### 11.3 Stati della Segnalazione
+### 10.3 Stati della Segnalazione
 
 | Stato | Significato |
 |---|---|
@@ -669,9 +669,9 @@ Stati possibili della segnalazione:
 
 ---
 
-## 12. Scelte progettuali rilevanti
+## 11. Scelte progettuali rilevanti
 
-### 12.1 LottoInvenduto come entità centrale
+### 11.1 LottoInvenduto come entità centrale
 
 La scelta più importante del progetto è modellare il `LottoInvenduto` come entità autonoma.
 
@@ -686,7 +686,7 @@ Questa separazione è fondamentale perché lo stesso prodotto può essere presen
 
 Senza questa distinzione, il sistema sarebbe una semplice lista di pasti. Con questa distinzione, invece, diventa un sistema informativo capace di gestire disponibilità concrete, temporanee e tracciabili.
 
-### 12.2 Separazione tra ProdottoAlimentare e LottoInvenduto
+### 11.2 Separazione tra ProdottoAlimentare e LottoInvenduto
 
 `ProdottoAlimentare` descrive il tipo di alimento.
 
@@ -696,7 +696,7 @@ Questa scelta permette di evitare duplicazioni. Senza questa separazione, ogni v
 
 Separando le due entità, il prodotto viene registrato una sola volta e può essere riutilizzato in più lotti.
 
-### 12.3 Gestione molti-a-molti degli allergeni
+### 11.3 Gestione molti-a-molti degli allergeni
 
 Gli allergeni non vengono salvati come campi booleani dentro `ProdottoAlimentare`.
 
@@ -726,7 +726,7 @@ Questa scelta è migliore perché:
 
 Dal punto di vista del progetto di basi di dati, questa relazione è significativa perché introduce una classica relazione molti-a-molti risolta tramite tabella associativa.
 
-### 12.4 Quantità disponibile salvata nel lotto
+### 11.4 Quantità disponibile salvata nel lotto
 
 Il campo `quantita_disponibile` viene salvato direttamente nel lotto.
 
