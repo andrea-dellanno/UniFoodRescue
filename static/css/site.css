@@ -1,0 +1,6 @@
+body { background: #f8f9fa; }
+.hero { background: linear-gradient(135deg, #e9f7ef, #fff); border: 1px solid #d1e7dd; border-radius: 1rem; }
+.card-lotto { min-height: 100%; }
+.badge-soft { background: #e9f7ef; color: #146c43; border: 1px solid #badbcc; }
+.stat-card { border-left: .35rem solid #198754; }
+.table td, .table th { vertical-align: middle; }

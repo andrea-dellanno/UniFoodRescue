@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}{{ lotto.prodotto.nome }} · UniFood Rescue{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="d-flex justify-content-between gap-3 align-items-start">
+          <div>
+            <h1 class="h3 mb-1">{{ lotto.prodotto.nome }}</h1>
+            <p class="text-muted mb-0">{{ lotto.mensa.nome }} · {{ lotto.prodotto.categoria.nome }}</p>
+          </div>
+          <span class="badge text-bg-success fs-6">{{ lotto.get_stato_display }}</span>
+        </div>
+        <hr>
+        <p>{% if lotto.prodotto.descrizione %}{{ lotto.prodotto.descrizione }}{% else %}Nessuna descrizione disponibile.{% endif %}</p>
+
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Quantità disponibile</dt><dd class="col-sm-8">{{ lotto.quantita_disponibile }} su {{ lotto.quantita_iniziale }}</dd>
+          <dt class="col-sm-4">Data scadenza</dt><dd class="col-sm-8">{{ lotto.data_scadenza|date:'d/m/Y' }}</dd>
+          <dt class="col-sm-4">Fascia ritiro</dt><dd class="col-sm-8">{{ lotto.ora_inizio_ritiro|time:'H:i' }} - {{ lotto.ora_fine_ritiro|time:'H:i' }}</dd>
+          <dt class="col-sm-4">Prezzo simbolico</dt><dd class="col-sm-8">€ {{ lotto.prezzo_simbolico }}</dd>
+          <dt class="col-sm-4">Caratteristiche</dt>
+          <dd class="col-sm-8">
+            {% if lotto.prodotto.vegetariano %}<span class="badge text-bg-light border">Vegetariano</span>{% endif %}
+            {% if lotto.prodotto.vegano %}<span class="badge text-bg-light border">Vegano</span>{% endif %}
+            {% if not lotto.prodotto.vegetariano and not lotto.prodotto.vegano %}<span class="text-muted">Nessuna caratteristica indicata</span>{% endif %}
+          </dd>
+          <dt class="col-sm-4">Allergeni</dt>
+          <dd class="col-sm-8">
+            {% for allergene in lotto.prodotto.allergeni.all %}
+              <span class="badge text-bg-warning">{{ allergene.nome }}</span>
+            {% empty %}
+              <span class="text-muted">Nessun allergene indicato</span>
+            {% endfor %}
+          </dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <h2 class="h5">Prenotazione</h2>
+        <p class="small text-muted">Il ritiro avviene presso la mensa indicata nella fascia oraria prevista.</p>
+        {% if user.is_authenticated and user.is_studente and lotto.is_prenotabile %}
+          <a class="btn btn-success w-100" href="{% url 'prenota_lotto' lotto.pk %}">Prenota questo lotto</a>
+        {% elif not user.is_authenticated %}
+          <a class="btn btn-success w-100" href="{% url 'login' %}">Accedi per prenotare</a>
+        {% else %}
+          <button class="btn btn-secondary w-100" disabled>Non prenotabile</button>
+        {% endif %}
+        <a class="btn btn-outline-secondary w-100 mt-2" href="{% url 'catalogo_lotti' %}">Torna al catalogo</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

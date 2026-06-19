@@ -1,0 +1,21 @@
+erDiagram
+    UTENTE ||--o| STUDENTE : specializza
+    UTENTE ||--o| OPERATORE_MENSA : specializza
+    UTENTE ||--o| AMMINISTRATORE : specializza
+    MENSA ||--o{ OPERATORE_MENSA : impiega
+    CATEGORIA_ALIMENTO ||--o{ PRODOTTO_ALIMENTARE : classifica
+    PRODOTTO_ALIMENTARE ||--o{ PRODOTTO_ALLERGENE : contiene
+    ALLERGENE ||--o{ PRODOTTO_ALLERGENE : presente_in
+    MENSA ||--o{ LOTTO_INVENDUTO : pubblica
+    PRODOTTO_ALIMENTARE ||--o{ LOTTO_INVENDUTO : compare_in
+    OPERATORE_MENSA ||--o{ LOTTO_INVENDUTO : crea
+    STUDENTE ||--o{ PRENOTAZIONE : effettua
+    LOTTO_INVENDUTO ||--o{ PRENOTAZIONE : riceve
+    PRENOTAZIONE ||--o| RITIRO : genera
+    OPERATORE_MENSA ||--o{ RITIRO : conferma
+    STUDENTE ||--o{ RECENSIONE_MENSA : scrive
+    MENSA ||--o{ RECENSIONE_MENSA : riceve
+    PRENOTAZIONE ||--o| RECENSIONE_MENSA : giustifica
+    PRENOTAZIONE ||--o{ SEGNALAZIONE : riguarda
+    STUDENTE ||--o{ SEGNALAZIONE : apre
+    AMMINISTRATORE ||--o{ SEGNALAZIONE : gestisce

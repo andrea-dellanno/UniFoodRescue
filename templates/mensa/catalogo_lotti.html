@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Catalogo lotti · UniFood Rescue{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h3 mb-1">Catalogo lotti disponibili</h1>
+    <p class="text-muted mb-0">Cerca le eccedenze disponibili nelle mense universitarie.</p>
+  </div>
+</div>
+
+<form method="get" class="card card-body shadow-sm border-0 mb-4">
+  <div class="row g-3 align-items-end">
+    <div class="col-md-3">{{ form.q.label_tag }}{{ form.q }}</div>
+    <div class="col-md-2">{{ form.mensa.label_tag }}{{ form.mensa }}</div>
+    <div class="col-md-2">{{ form.categoria.label_tag }}{{ form.categoria }}</div>
+    <div class="col-md-2">{{ form.senza_allergene.label_tag }}{{ form.senza_allergene }}</div>
+    <div class="col-md-2">
+      <div class="form-check">{{ form.vegetariano }} <label class="form-check-label" for="{{ form.vegetariano.id_for_label }}">Vegetariano</label></div>
+      <div class="form-check">{{ form.vegano }} <label class="form-check-label" for="{{ form.vegano.id_for_label }}">Vegano</label></div>
+    </div>
+    <div class="col-md-1"><button class="btn btn-success w-100">Filtra</button></div>
+  </div>
+</form>
+
+<div class="row g-3">
+  {% for lotto in lotti %}
+    {% include 'mensa/partials/lotto_card.html' with lotto=lotto %}
+  {% empty %}
+    <div class="col-12"><div class="alert alert-info">Nessun lotto corrisponde ai filtri selezionati.</div></div>
+  {% endfor %}
+</div>
+{% endblock %}

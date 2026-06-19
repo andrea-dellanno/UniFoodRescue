@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Gestione lotti · UniFood Rescue{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h3 mb-1">Gestione lotti</h1>
+    <p class="text-muted mb-0">Lotti pubblicati dalla mensa {{ operatore.mensa.nome }}.</p>
+  </div>
+  <a class="btn btn-success" href="{% url 'crea_lotto' %}">Nuovo lotto</a>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Prodotto</th><th>Quantità</th><th>Ritiro</th><th>Scadenza</th><th>Stato</th><th class="text-end">Azioni</th></tr></thead>
+      <tbody>
+      {% for lotto in lotti %}
+        <tr>
+          <td>{{ lotto.prodotto.nome }}</td>
+          <td>{{ lotto.quantita_disponibile }}/{{ lotto.quantita_iniziale }}</td>
+          <td>{{ lotto.ora_inizio_ritiro|time:'H:i' }} - {{ lotto.ora_fine_ritiro|time:'H:i' }}</td>
+          <td>{{ lotto.data_scadenza|date:'d/m/Y' }}</td>
+          <td><span class="badge text-bg-secondary">{{ lotto.get_stato_display }}</span></td>
+          <td class="text-end">
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'modifica_lotto' lotto.pk %}">Modifica</a>
+            {% if lotto.stato == 'disponibile' %}
+              <form method="post" action="{% url 'chiudi_lotto' lotto.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button class="btn btn-outline-danger btn-sm">Chiudi</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" class="text-muted">Nessun lotto presente.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
