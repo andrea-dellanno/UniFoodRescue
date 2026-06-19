@@ -4,7 +4,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![Django](https://img.shields.io/badge/Django-darkgreen)
-![Database](https://img.shields.io/badge/Database-SQLite-lightgrey)
+![Database](https://img.shields.io/badge/Database-SQL-lightgrey)
 
 
 **Autore:** Andrea Dell'Anno   
