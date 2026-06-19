@@ -3,7 +3,7 @@
 > Sistema  Django per la gestione e il recupero delle eccedenze alimentari nelle mense universitarie.
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-![Django](https://img.shields.io/badge/Django-4.x-darkgreen)
+![Django](https://img.shields.io/badge/Django-darkgreen)
 ![Database](https://img.shields.io/badge/Database-SQLite-lightgrey)
 
 
