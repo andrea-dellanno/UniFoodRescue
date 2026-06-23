@@ -188,8 +188,8 @@ AND TIME('now') BETWEEN l.ora_inizio_ritiro AND l.ora_fine_ritiro
 ORDER BY l.ora_fine_ritiro ASC;
 
 
--- 12. Lotti pubblicati ma mai prenotati
--- Individua i lotti che risultano disponibili ma non hanno ancora ricevuto prenotazioni.
+-- 12. Lotti disponibili ma mai prenotati
+-- Individua i lotti ancora disponibili che non hanno ancora ricevuto prenotazioni.
 
 SELECT
     l.id,
@@ -204,6 +204,8 @@ JOIN mensa_prodottoalimentare p ON l.prodotto_id = p.id
 JOIN mensa_mensa m ON l.mensa_id = m.id
 LEFT JOIN mensa_prenotazione pr ON pr.lotto_id = l.id
 WHERE pr.id IS NULL
+AND l.stato = 'disponibile'
+AND l.quantita_disponibile > 0
 ORDER BY l.data_pubblicazione DESC;
 
 
