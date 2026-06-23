@@ -690,7 +690,7 @@ Tuttavia, per semplicità implementativa e chiarezza applicativa, viene mantenut
 
 Questa scelta richiede un vincolo applicativo: quando si crea o annulla una prenotazione, `quantita_disponibile` deve essere aggiornata correttamente.
 
-Per evitare inconsistenze, l'aggiornamento viene gestito in transazione atomica.
+Per evitare inconsistenze, l'aggiornamento viene gestito in transazione atomica, cioè come un'unica operazione indivisibile: la creazione della prenotazione e la riduzione della quantità disponibile devono riuscire entrambe. Se una delle due operazioni fallisce, anche l'altra viene annullata, evitando dati incoerenti.
 
 ### 9.6 Disponibilità e non ritirati
 
@@ -743,9 +743,9 @@ Il focus rimane sul database e sulla gestione dei processi informativi.
 
 Nel modello implementativo è presente il concetto di ritiro confermato dall'operatore.
 
-La conferma del ritiro viene semplificata nell'interfaccia: l'operatore non passa più da una pagina intermedia con scelta manuale di più esiti e note, ma usa direttamente l'azione `Segna ritirata`.
+La conferma del ritiro viene semplificata nell'interfaccia: l'operatore usa direttamente l'azione `Segna ritirata`.
 
-Il non ritiro non viene gestito manualmente dall'operatore: viene determinato automaticamente quando la fascia oraria termina senza conferma.
+Il non ritiro non viene gestito manualmente dall'operatore: viene determinato automaticamente quando la fascia oraria termina senza ritiro.
 
 Questa scelta rende più chiaro il flusso operativo:
 
