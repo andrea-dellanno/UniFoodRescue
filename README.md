@@ -819,133 +819,69 @@ Questa separazione evita che la home pubblica mostri dati legati a specifici ute
 
 ## 10. Query SQL significative
 
+Le query SQL complete sono raccolte nel file [`docs/query_significative.sql`](docs/query_significative.sql).
+
+Nel README vengono riportati solo alcuni esempi rappresentativi, utili per mostrare le operazioni principali del sistema.
+
+---
+
 ### 10.1 Ricerca dei lotti disponibili per mensa
 
+Questa query mostra i lotti ancora disponibili presso una determinata mensa.
+
 ```sql
-SELECT l.id, p.nome, l.quantita_disponibile, l.ora_inizio_ritiro, l.ora_fine_ritiro
+SELECT l.id, p.nome, m.nome AS mensa, l.quantita_disponibile, l.ora_inizio_ritiro, l.ora_fine_ritiro
 FROM LottoInvenduto l
-JOIN ProdottoAlimentare p ON l.prodotto_id = p.id
-JOIN Mensa m ON l.mensa_id = m.id
+JOIN ProdottoAlimentare p ON l.id_prodotto = p.id_prodotto
+JOIN Mensa m ON l.id_mensa = m.id_mensa
 WHERE m.nome = 'Mensa Centrale'
 AND l.stato = 'disponibile'
 AND l.quantita_disponibile > 0;
 ```
 
-### 10.2 Ricerca dei lotti che non contengono un certo allergene
+---
 
-Esempio: prodotti senza lattosio.
+### 10.2 Storico prenotazioni di uno studente
 
-```sql
-SELECT DISTINCT l.id, p.nome, m.nome AS mensa, l.quantita_disponibile
-FROM LottoInvenduto l
-JOIN ProdottoAlimentare p ON l.prodotto_id = p.id
-JOIN Mensa m ON l.mensa_id = m.id
-WHERE l.stato = 'disponibile'
-AND l.quantita_disponibile > 0
-AND p.id NOT IN (
-    SELECT pa.prodotto_id
-    FROM ProdottoAllergene pa
-    JOIN Allergene a ON pa.allergene_id = a.id
-    WHERE a.nome = 'Lattosio'
-);
-```
-
-### 10.3 Storico prenotazioni di uno studente
+Questa query permette di visualizzare le prenotazioni effettuate da uno studente, con il prodotto, la mensa, la quantità e lo stato.
 
 ```sql
-SELECT pr.id, p.nome, m.nome AS mensa, pr.quantita, pr.stato, pr.data_prenotazione
+SELECT pr.id_prenotazione, p.nome AS prodotto, m.nome AS mensa, pr.quantita, pr.stato, pr.data_prenotazione
 FROM Prenotazione pr
-JOIN LottoInvenduto l ON pr.lotto_id = l.id
-JOIN ProdottoAlimentare p ON l.prodotto_id = p.id
-JOIN Mensa m ON l.mensa_id = m.id
-WHERE pr.studente_id = 1
+JOIN LottoInvenduto l ON pr.id_lotto = l.id_lotto
+JOIN ProdottoAlimentare p ON l.id_prodotto = p.id_prodotto
+JOIN Mensa m ON l.id_mensa = m.id_mensa
+WHERE pr.id_studente = 1
 ORDER BY pr.data_prenotazione DESC;
 ```
 
-### 10.4 Prenotazioni attive da ritirare per una mensa
+---
 
-```sql
-SELECT pr.id, u.first_name, u.last_name, p.nome, pr.quantita, l.data_scadenza,
-       l.ora_inizio_ritiro, l.ora_fine_ritiro
-FROM Prenotazione pr
-JOIN Studente s ON pr.studente_id = s.id
-JOIN Utente u ON s.utente_id = u.id
-JOIN LottoInvenduto l ON pr.lotto_id = l.id
-JOIN ProdottoAlimentare p ON l.prodotto_id = p.id
-WHERE l.mensa_id = 1
-AND pr.stato = 'attiva'
-ORDER BY l.data_scadenza, l.ora_inizio_ritiro;
-```
+### 10.3 Giustificazione della quantità disponibile di un lotto
 
-### 10.5 Porzioni ritirate per mensa
-
-```sql
-SELECT m.nome, SUM(pr.quantita) AS porzioni_ritirate
-FROM Ritiro r
-JOIN Prenotazione pr ON r.prenotazione_id = pr.id
-JOIN LottoInvenduto l ON pr.lotto_id = l.id
-JOIN Mensa m ON l.mensa_id = m.id
-WHERE pr.stato = 'ritirata'
-GROUP BY m.nome;
-```
-
-### 10.6 Media recensioni per mensa
-
-```sql
-SELECT m.nome, AVG(rm.voto) AS voto_medio
-FROM RecensioneMensa rm
-JOIN Mensa m ON rm.mensa_id = m.id
-GROUP BY m.nome;
-```
-
-### 10.7 Segnalazioni aperte o in carico
-
-```sql
-SELECT s.id, s.titolo, s.stato, s.data_apertura
-FROM Segnalazione s
-WHERE s.stato IN ('aperta', 'in_carico')
-ORDER BY s.data_apertura ASC;
-```
-
-### 10.8 Lotti più richiesti
-
-```sql
-SELECT p.nome, COUNT(pr.id) AS numero_prenotazioni
-FROM Prenotazione pr
-JOIN LottoInvenduto l ON pr.lotto_id = l.id
-JOIN ProdottoAlimentare p ON l.prodotto_id = p.id
-GROUP BY p.nome
-ORDER BY numero_prenotazioni DESC;
-```
-
-### 10.9 Quantità non recuperata stimata
-
-```sql
-SELECT m.nome, SUM(pr.quantita) AS quantita_non_ritirata
-FROM Prenotazione pr
-JOIN LottoInvenduto l ON pr.lotto_id = l.id
-JOIN Mensa m ON l.mensa_id = m.id
-WHERE pr.stato = 'non_ritirata'
-GROUP BY m.nome;
-```
-
-### 10.10 Giustificazione quantità disponibile di un lotto
+Questa query mostra come la quantità disponibile di un lotto sia giustificata dalle prenotazioni collegate.
 
 ```sql
 SELECT
-    l.id,
+    l.id_lotto,
     l.quantita_iniziale,
     l.quantita_disponibile,
     SUM(CASE WHEN pr.stato = 'ritirata' THEN pr.quantita ELSE 0 END) AS quantita_ritirata,
     SUM(CASE WHEN pr.stato = 'non_ritirata' THEN pr.quantita ELSE 0 END) AS quantita_non_ritirata,
     SUM(CASE WHEN pr.stato = 'attiva' THEN pr.quantita ELSE 0 END) AS quantita_da_ritirare
 FROM LottoInvenduto l
-LEFT JOIN Prenotazione pr ON pr.lotto_id = l.id
-WHERE l.id = 1
-GROUP BY l.id, l.quantita_iniziale, l.quantita_disponibile;
+LEFT JOIN Prenotazione pr ON pr.id_lotto = l.id_lotto
+WHERE l.id_lotto = 1
+GROUP BY l.id_lotto, l.quantita_iniziale, l.quantita_disponibile;
 ```
 
----
+Questa query è significativa perché mostra il legame tra:
+
+- quantità iniziale del lotto;
+- quantità ancora disponibile;
+- quantità già ritirata;
+- quantità prenotata ma non ritirata;
+- quantità ancora da ritirare.
 
 ## 11. Struttura del repository
 
