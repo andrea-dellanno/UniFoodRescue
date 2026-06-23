@@ -157,10 +157,104 @@ SELECT
     l.id,
     l.quantita_iniziale,
     l.quantita_disponibile,
-    SUM(CASE WHEN pr.stato = 'ritirata' THEN pr.quantita ELSE 0 END) AS quantita_ritirata,
-    SUM(CASE WHEN pr.stato = 'non_ritirata' THEN pr.quantita ELSE 0 END) AS quantita_non_ritirata,
-    SUM(CASE WHEN pr.stato = 'attiva' THEN pr.quantita ELSE 0 END) AS quantita_da_ritirare
+    COALESCE(SUM(CASE WHEN pr.stato = 'ritirata' THEN pr.quantita ELSE 0 END), 0) AS quantita_ritirata,
+    COALESCE(SUM(CASE WHEN pr.stato = 'non_ritirata' THEN pr.quantita ELSE 0 END), 0) AS quantita_non_ritirata,
+    COALESCE(SUM(CASE WHEN pr.stato = 'attiva' THEN pr.quantita ELSE 0 END), 0) AS quantita_da_ritirare
 FROM mensa_lottoinvenduto l
 LEFT JOIN mensa_prenotazione pr ON pr.lotto_id = l.id
 WHERE l.id = 1
 GROUP BY l.id, l.quantita_iniziale, l.quantita_disponibile;
+
+
+-- 11. Lotti pronti al ritiro nella fascia oraria corrente
+-- Mostra i lotti disponibili oggi e ritirabili nell'orario corrente.
+
+SELECT
+    l.id,
+    p.nome AS prodotto,
+    m.nome AS mensa,
+    l.quantita_disponibile,
+    l.data_scadenza,
+    l.ora_inizio_ritiro,
+    l.ora_fine_ritiro,
+    l.stato
+FROM mensa_lottoinvenduto l
+JOIN mensa_prodottoalimentare p ON l.prodotto_id = p.id
+JOIN mensa_mensa m ON l.mensa_id = m.id
+WHERE l.stato = 'disponibile'
+AND l.quantita_disponibile > 0
+AND l.data_scadenza = DATE('now')
+AND TIME('now') BETWEEN l.ora_inizio_ritiro AND l.ora_fine_ritiro
+ORDER BY l.ora_fine_ritiro ASC;
+
+
+-- 12. Lotti pubblicati ma mai prenotati
+-- Individua i lotti che risultano disponibili ma non hanno ancora ricevuto prenotazioni.
+
+SELECT
+    l.id,
+    p.nome AS prodotto,
+    m.nome AS mensa,
+    l.quantita_iniziale,
+    l.quantita_disponibile,
+    l.data_pubblicazione,
+    l.stato
+FROM mensa_lottoinvenduto l
+JOIN mensa_prodottoalimentare p ON l.prodotto_id = p.id
+JOIN mensa_mensa m ON l.mensa_id = m.id
+LEFT JOIN mensa_prenotazione pr ON pr.lotto_id = l.id
+WHERE pr.id IS NULL
+ORDER BY l.data_pubblicazione DESC;
+
+
+-- 13. Studenti con più prenotazioni non ritirate
+-- Mostra gli studenti che hanno accumulato almeno una prenotazione non ritirata.
+
+SELECT
+    u.id,
+    u.first_name,
+    u.last_name,
+    u.email,
+    COUNT(pr.id) AS numero_non_ritirate,
+    SUM(pr.quantita) AS porzioni_non_ritirate
+FROM mensa_prenotazione pr
+JOIN mensa_studente s ON pr.studente_id = s.id
+JOIN mensa_utente u ON s.utente_id = u.id
+WHERE pr.stato = 'non_ritirata'
+GROUP BY u.id, u.first_name, u.last_name, u.email
+HAVING COUNT(pr.id) >= 1
+ORDER BY numero_non_ritirate DESC, porzioni_non_ritirate DESC;
+
+
+-- 14. Prodotti con elenco degli allergeni
+-- Mostra ogni prodotto con gli allergeni associati, usando una aggregazione testuale.
+
+SELECT
+    p.id,
+    p.nome AS prodotto,
+    GROUP_CONCAT(a.nome, ', ') AS allergeni
+FROM mensa_prodottoalimentare p
+LEFT JOIN mensa_prodottoallergene pa ON pa.prodotto_id = p.id
+LEFT JOIN mensa_allergene a ON pa.allergene_id = a.id
+GROUP BY p.id, p.nome
+ORDER BY p.nome ASC;
+
+
+-- 15. Tasso di recupero per mensa
+-- Calcola, per ogni mensa, quante porzioni prenotate sono state effettivamente ritirate.
+
+SELECT
+    m.nome AS mensa,
+    SUM(CASE WHEN pr.stato = 'ritirata' THEN pr.quantita ELSE 0 END) AS porzioni_ritirate,
+    SUM(CASE WHEN pr.stato IN ('ritirata', 'non_ritirata') THEN pr.quantita ELSE 0 END) AS porzioni_concluse,
+    ROUND(
+        100.0 * SUM(CASE WHEN pr.stato = 'ritirata' THEN pr.quantita ELSE 0 END)
+        / NULLIF(SUM(CASE WHEN pr.stato IN ('ritirata', 'non_ritirata') THEN pr.quantita ELSE 0 END), 0),
+        2
+    ) AS percentuale_recupero
+FROM mensa_prenotazione pr
+JOIN mensa_lottoinvenduto l ON pr.lotto_id = l.id
+JOIN mensa_mensa m ON l.mensa_id = m.id
+WHERE pr.stato IN ('ritirata', 'non_ritirata')
+GROUP BY m.nome
+ORDER BY percentuale_recupero DESC;
