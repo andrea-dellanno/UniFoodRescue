@@ -25,8 +25,8 @@
 - [10. Query SQL significative](#10-query-sql-significative)
 - [11. Struttura del repository](#11-struttura-del-repository)
 - [12. Organizzazione delle pagine](#12-organizzazione-delle-pagine)
-- [13. Bonus sicurezza](#14-bonus-sicurezza)
-- [14. Considerazioni finali](#15-considerazioni-finali)
+- [13. Bonus sicurezza](#13-bonus-sicurezza)
+- [14. Considerazioni finali](#14-considerazioni-finali)
 
 ---
 
@@ -376,7 +376,9 @@ RECENSIONE(i̲d̲_̲r̲e̲c̲e̲n̲s̲i̲o̲n̲e̲, id_studente: UTENTE, id_mens
 SEGNALAZIONE(i̲d̲_̲s̲e̲g̲n̲a̲l̲a̲z̲i̲o̲n̲e̲, id_prenotazione: PRENOTAZIONE, id_autore: UTENTE, id_amministratore: UTENTE, titolo, descrizione, stato, esito, data_apertura, data_chiusura)
 ```
 
-Nota: in Django la relazione molti-a-molti tra `ProdottoAlimentare` e `Allergene` è implementata tramite modello esplicito `ProdottoAllergene`, con vincolo di unicità sulla coppia prodotto-allergene.
+Nota: in Django la relazione molti-a-molti tra `ProdottoAlimentare` e `Allergene` viene rappresentata dalla tabella associativa `Contenuto`, con chiave primaria composta da `id_prodotto` e `id_allergene`.
+
+Nota implementativa: nel codice Django la stessa associazione è implementata tramite il modello esplicito `ProdottoAllergene`, che corrisponde alla tabella associativa usata per collegare prodotti e allergeni.
 
 ---
 
@@ -911,9 +913,6 @@ Questa query è significativa perché mostra il legame tra:
 ├── static/css/                 # stile CSS personalizzato
 │   └── site.css
 │
-├── fixtures/                   # dati iniziali di esempio
-│   └── initial_data.json
-│
 ├── docs/                       # documentazione tecnica
 │   ├── relazione.md
 │   ├── alternative_generalizzazione.md
@@ -921,6 +920,7 @@ Questa query è significativa perché mostra il legame tra:
 │   ├── query_significative.sql
 │   └── security_bonus.md
 │
+├── db.sqlite3                  # database SQLite popolato con dati di esempio
 ├── manage.py
 ├── requirements.txt
 ├── .gitignore
