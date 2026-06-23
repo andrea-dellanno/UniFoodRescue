@@ -1,11 +1,10 @@
 # UniFood Rescue
 
-> Sistema  Django per la gestione e il recupero delle eccedenze alimentari nelle mense universitarie.
+> Sistema Django per la gestione e il recupero delle eccedenze alimentari nelle mense universitarie.
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![Django](https://img.shields.io/badge/Django-darkgreen)
 ![Database](https://img.shields.io/badge/Database-SQL-lightgrey)
-
 
 **Autore:** Andrea Dell'Anno   
 **Tema:** controllo eccedenze e lotti alimentari universitari
@@ -18,12 +17,16 @@
 - [2. Obiettivo del sistema](#2-obiettivo-del-sistema)
 - [3. Funzionalità implementate](#3-funzionalità-implementate)
 - [4. Flusso principale](#4-flusso-principale)
-- [5. Generalizzazione e specializzazione](#6-generalizzazione-e-specializzazione)
-- [6. Modello logico relazionale](#7-modello-logico-relazionale)
-- [7. Vincoli del sistema](#8-vincoli-del-sistema)
-- [8. Stati del dominio](#9-stati-del-dominio)
-- [9. Scelte progettuali rilevanti](#10-scelte-progettuali-rilevanti)
-- [10. Query SQL significative](#11-query-sql-significative)
+- [5. Generalizzazione e specializzazione](#5-generalizzazione-e-specializzazione)
+- [6. Modello logico relazionale](#6-modello-logico-relazionale)
+- [7. Vincoli del sistema](#7-vincoli-del-sistema)
+- [8. Stati del dominio](#8-stati-del-dominio)
+- [9. Scelte progettuali rilevanti](#9-scelte-progettuali-rilevanti)
+- [10. Query SQL significative](#10-query-sql-significative)
+- [11. Struttura del repository](#11-struttura-del-repository)
+- [12. Organizzazione delle pagine](#12-organizzazione-delle-pagine)
+- [13. Bonus sicurezza](#14-bonus-sicurezza)
+- [14. Considerazioni finali](#15-considerazioni-finali)
 
 ---
 
@@ -31,26 +34,36 @@
 
 **UniFood Rescue** è un'applicazione web pensata per un contesto universitario, finalizzata alla gestione e al recupero delle eccedenze alimentari prodotte dalle mense universitarie.
 
-Il processo reale è il seguente: a fine servizio una mensa può avere prodotti alimentari ancora disponibili. Questi prodotti non devono essere trattati come pasti generici, ma come **lotti invenduti**, cioè disponibilità concrete associate a:
+Il processo reale è il seguente: a fine servizio una mensa può avere prodotti alimentari ancora disponibili. Questi prodotti non vengono trattati come pasti generici, ma come **lotti invenduti**, cioè disponibilità concrete associate a:
 
 - una mensa precisa;
 - un prodotto alimentare preciso;
 - una quantità iniziale;
 - una quantità ancora disponibile;
-- una data di scadenza;
+- una data di ritiro;
 - una fascia oraria di ritiro;
 - uno stato operativo;
-- un operatore responsabile della pubblicazione.
+- un operatore responsabile della pubblicazione;
+- un codice lotto univoco e leggibile.
 
-Gli studenti possono consultare i lotti disponibili, filtrare i risultati per mensa, categoria, caratteristiche alimentari o allergeni, prenotare una quantità e ritirarla nella fascia oraria indicata. Gli operatori mensa possono invece pubblicare nuovi lotti, aggiornare le quantità, chiudere disponibilità non più valide e confermare i ritiri. Gli amministratori supervisionano il sistema,prendendo in carico le segnalazioni.
+Nel sistema ogni lotto viene identificato tramite un codice breve del tipo:
 
-Il sistema non prevede pagamenti online, consegne a domicilio, QR code obbligatori o funzionalità mobile complesse.
+```text
+L-0001
+L-0002
+L-0003
+```
+
+Il prefisso `L` indica il lotto. Il codice non è inserito manualmente dall'operatore, ma viene generato automaticamente a partire dall'identificativo del lotto. Non sono previsti codici separati per ritiro, prenotazione o pubblicazione: il codice visibile è unico ed è sempre associato al lotto.
 
 La piattaforma prevede tre tipologie principali di utenti:
 
-- **Studenti**: consultano i lotti disponibili, prenotano prodotti, visualizzano lo storico, lasciano recensioni e aprono segnalazioni.
-- **Operatori mensa**: creano lotti invenduti, modificano quantità, chiudono lotti, confermano ritiri e gestiscono i prodotti della propria mensa.
+- **Studenti**: consultano i lotti disponibili, prenotano prodotti, visualizzano le proprie prenotazioni, lasciano recensioni e aprono segnalazioni.
+- **Operatori mensa**: pubblicano lotti invenduti, modificano le disponibilità, chiudono lotti, visualizzano i ritiri da confermare e registrano i ritiri completati.
 - **Amministratori**: gestiscono mense, categorie, allergeni, prodotti, statistiche e segnalazioni.
+
+Il sistema non prevede pagamenti online, consegne a domicilio, QR code obbligatori o funzionalità mobile complesse.
+
 
 ---
 
@@ -58,22 +71,42 @@ La piattaforma prevede tre tipologie principali di utenti:
 
 Il sistema nasce con l'obiettivo di supportare le mense universitarie nella gestione organizzata delle eccedenze alimentari giornaliere.
 
-In molte mense, al termine del servizio, possono rimanere pasti o prodotti non distribuiti. Senza un sistema informativo strutturato, queste eccedenze rischiano di essere eliminate, gestite informalmente o distribuite senza una reale tracciabilità.
+Senza un sistema strutturato, queste eccedenze rischiano di essere eliminate, gestite informalmente o distribuite senza tracciabilità.
 
 La logica principale non è quella della vendita, ma quella della **tracciabilità**. Il sistema deve rispondere a domande come:
 
 - quale mensa ha pubblicato un certo lotto?
 - quale prodotto è stato reso disponibile?
 - quali allergeni contiene?
-- quante porzioni erano disponibili all'inizio?
-- quante sono ancora prenotabili?
+- quante porzioni sono ancora prenotabili?
 - quale studente ha prenotato?
-- il ritiro è stato effettivamente confermato?
-- ci sono state segnalazioni o problemi?
+- il lotto è futuro, pronto al ritiro, ritirato o non ritirato?
+- il ritiro è stato effettivamente confermato dall'operatore?
+- ci sono state recensioni o segnalazioni?
+
+Un aspetto importante è la coerenza tra quantità iniziale, quantità disponibile e prenotazioni effettuate.
+
+Esempio:
+
+```text
+Lotto L-0001
+quantità iniziale = 8
+
+Mario Rossi prenota 1 porzione
+Mario Rossi prenota altre 2 porzioni ma non le ritira
+
+quantità non più disponibile = 3
+quantità disponibile = 5
+
+risultato visualizzato:
+5/8 disponibili
+```
+
+Il valore `5/8` è quindi giustificato dalle prenotazioni collegate al lotto, comprese quelle ritirate e quelle non ritirate.
 
 ---
 
-## 3. Funzionalità Supportate
+## 3. Funzionalità implementate
 
 1. Registrazione e autenticazione degli utenti con ruolo differenziato: Studente / Operatore Mensa / Amministratore.
 2. Gestione delle mense universitarie.
@@ -85,16 +118,29 @@ La logica principale non è quella della vendita, ma quella della **tracciabilit
 8. Visualizzazione dei lotti disponibili da parte degli studenti.
 9. Ricerca e filtro dei lotti per mensa, categoria, allergene, disponibilità, vegetariano e vegano.
 10. Prenotazione di una quantità di un lotto da parte dello studente.
-11. Aggiornamento automatico della quantità disponibile del lotto.
-12. Annullamento di una prenotazione attiva con restituzione della quantità al lotto.
-13. Visualizzazione dello storico delle prenotazioni dello studente.
-14. Conferma del ritiro da parte dell'operatore mensa.
-15. Gestione degli stati del lotto e della prenotazione.
-16. Inserimento di recensioni sulla mensa dopo un ritiro completato.
-17. Apertura di segnalazioni relative a prenotazioni o ritiri problematici.
-18. Presa in carico e gestione delle segnalazioni da parte dell'amministratore.
-19. Dashboard riepilogativa per monitorare lotti pubblicati, porzioni prenotate, porzioni ritirate e quantità recuperate.
-20. Area admin Django per la gestione completa dei dati.
+11. Limite massimo di prenotazione pari a 99 porzioni per volta.
+12. Aggiornamento automatico della quantità disponibile del lotto quando viene effettuata una prenotazione.
+13. Annullamento di una prenotazione attiva da parte dello studente con restituzione della quantità al lotto.
+14. Visualizzazione dello storico delle prenotazioni dello studente.
+15. Visualizzazione dello stato interfaccia della prenotazione:
+    - ritiro programmato;
+    - pronta da ritirare;
+    - ritirata;
+    - non ritirata;
+    - annullata.
+16. Area operatore dedicata, distinta dall'area studente.
+17. Home operatore come dashboard operativa della mensa.
+18. Visualizzazione dei ritiri da confermare da parte dell'operatore.
+19. Conferma diretta del ritiro tramite azione "Segna ritirata", senza pagina intermedia non necessaria.
+20. Passaggio automatico a `non_ritirata` per prenotazioni attive non confermate entro la fine della fascia di ritiro.
+21. Gestione degli stati del lotto e della prenotazione.
+22. Inserimento di recensioni sulla mensa dopo un ritiro completato.
+23. Voto recensione obbligatorio, vincolato da 1 a 5.
+24. Commento recensione opzionale con placeholder esplicativo.
+25. Apertura di segnalazioni relative a prenotazioni problematiche.
+26. Presa in carico e gestione delle segnalazioni da parte dell'amministratore.
+27. Dashboard riepilogative per studente, operatore e amministratore.
+28. Area admin Django per la gestione completa dei dati.
 
 ---
 
@@ -103,26 +149,30 @@ La logica principale non è quella della vendita, ma quella della **tracciabilit
 Il flusso principale dell'applicazione è il seguente:
 
 1. Un operatore mensa accede alla piattaforma.
-2. L'operatore seleziona un prodotto alimentare già registrato nel sistema.
-3. L'operatore crea un lotto invenduto indicando mensa, prodotto, quantità iniziale, fascia oraria di ritiro e data di scadenza.
-4. Il lotto viene pubblicato nello stato `disponibile`.
-5. Uno studente accede al catalogo dei lotti disponibili.
-6. Lo studente filtra i lotti in base a mensa, categoria, allergeni o caratteristiche alimentari.
-7. Lo studente prenota una quantità del lotto.
-8. Il sistema controlla che il lotto sia disponibile, non scaduto e con quantità sufficiente.
-9. Se la prenotazione è valida, il sistema riduce la quantità disponibile del lotto.
-10. Lo studente si presenta in mensa nella fascia oraria prevista.
-11. L'operatore mensa conferma il ritiro.
-12. La prenotazione passa allo stato `ritirata`.
-13. Il sistema registra un record di ritiro.
-14. Lo studente può lasciare una recensione sulla mensa.
-15. In caso di problema, lo studente può aprire una segnalazione.
-16. L'amministratore può prendere in carico la segnalazione e chiuderla con un esito.
+2. L'operatore pubblica un lotto invenduto selezionando un prodotto alimentare già registrato.
+3. Il sistema associa automaticamente il lotto alla mensa dell'operatore.
+4. L'operatore inserisce la quantità disponibile, la data e la fascia oraria di ritiro.
+5. Alla pubblicazione, la quantità iniziale viene impostata uguale alla quantità disponibile inserita.
+6. Il lotto viene pubblicato nello stato `disponibile`.
+7. Uno studente accede al catalogo dei lotti disponibili.
+8. Lo studente filtra i lotti in base a mensa, categoria, allergeni o caratteristiche alimentari.
+9. Lo studente prenota una quantità del lotto.
+10. Il sistema controlla che il lotto sia disponibile, non scaduto e con quantità sufficiente.
+11. Se la prenotazione è valida, il sistema riduce automaticamente la quantità disponibile del lotto.
+12. Se il ritiro è futuro, la prenotazione viene mostrata come `Ritiro programmato`.
+13. Quando arriva la fascia oraria di ritiro, la prenotazione viene mostrata allo studente come `Pronta da ritirare`.
+14. Nella stessa fascia oraria, l'operatore vede la prenotazione come `In attesa di ritiro`.
+15. L'operatore può segnare direttamente la prenotazione come ritirata.
+16. La prenotazione passa allo stato `ritirata`.
+17. Se la fascia oraria termina senza conferma, la prenotazione attiva passa automaticamente allo stato `non_ritirata`.
+18. Lo studente può lasciare una recensione sulla mensa solo dopo un ritiro completato.
+19. In caso di problema, lo studente può aprire una segnalazione.
+20. L'amministratore può prendere in carico la segnalazione e chiuderla con un esito.
 
 In forma sintetica:
 
 ```text
-OperatoreMensa -> LottoInvenduto -> Prenotazione -> Ritiro -> Recensione / Segnalazione
+OperatoreMensa -> LottoInvenduto -> Prenotazione -> Ritiro confermato / Non ritiro automatico -> Recensione / Segnalazione
 ```
 
 Questo flusso rappresenta il ciclo di vita completo del dato: dalla pubblicazione dell'eccedenza fino alla sua consegna effettiva o alla gestione di eventuali problemi.
@@ -131,7 +181,7 @@ Questo flusso rappresenta il ciclo di vita completo del dato: dalla pubblicazion
 
 ## 5. Generalizzazione e specializzazione
 
-Il sistema prevede una gerarchia di generalizzazione con entità padre `Utente` e tre entità figlie:
+Il sistema prevede una gerarchia di generalizzazione con entità padre `Utente` e tre specializzazioni:
 
 - `Studente`
 - `OperatoreMensa`
@@ -142,96 +192,13 @@ La generalizzazione è:
 - **totale**, perché ogni utente registrato deve essere necessariamente uno studente, un operatore mensa o un amministratore;
 - **disgiunta**, perché un utente non può appartenere contemporaneamente a più ruoli.
 
-### Alternativa 1 — Accorpamento delle entità figlie nel padre
+Nel ragionamento concettuale sono state considerate due possibili trasformazioni.
 
-In questa alternativa si mantiene una sola tabella `Utente`, nella quale vengono inseriti anche gli attributi specifici di `Studente`, `OperatoreMensa` e `Amministratore`.
+---
 
-Schema risultante:
+### Alternativa 1 — Accorpamento del padre nelle entità figlie
 
-```text
-Utente(
-  id,
-  username,
-  password,
-  nome,
-  cognome,
-  email,
-  ruolo,
-  matricola,
-  corso_studi,
-  anno_corso,
-  data_registrazione_studente,
-  codice_operatore,
-  mansione,
-  mensa_id,
-  area_responsabilita
-)
-```
-
-Vantaggi:
-
-- una sola tabella per tutti gli utenti;
-- query semplici per il recupero dei dati utente;
-- nessun join necessario per ottenere il profilo completo;
-- gestione centralizzata di username, email e password.
-
-Svantaggi:
-
-- presenza di molti valori `NULL`;
-- gli attributi dello studente non hanno senso per un operatore o amministratore;
-- gli attributi dell'operatore mensa non hanno senso per uno studente o amministratore;
-- gli attributi dell'amministratore non hanno senso per uno studente o operatore;
-- la tabella diventa molto ampia;
-- maggiore difficoltà nel garantire vincoli specifici per ruolo;
-- soluzione meno pulita dal punto di vista concettuale.
-
-Vincoli necessari:
-
-```text
-ruolo IN ('studente', 'operatore_mensa', 'amministratore')
-```
-
-Se `ruolo = 'studente'`, allora:
-
-```text
-matricola IS NOT NULL
-corso_studi IS NOT NULL
-anno_corso IS NOT NULL
-codice_operatore IS NULL
-mansione IS NULL
-mensa_id IS NULL
-area_responsabilita IS NULL
-```
-
-Se `ruolo = 'operatore_mensa'`, allora:
-
-```text
-codice_operatore IS NOT NULL
-mansione IS NOT NULL
-mensa_id IS NOT NULL
-matricola IS NULL
-corso_studi IS NULL
-anno_corso IS NULL
-area_responsabilita IS NULL
-```
-
-Se `ruolo = 'amministratore'`, allora:
-
-```text
-area_responsabilita IS NOT NULL
-matricola IS NULL
-corso_studi IS NULL
-anno_corso IS NULL
-codice_operatore IS NULL
-mansione IS NULL
-mensa_id IS NULL
-```
-
-Giudizio: questa alternativa è semplice, ma richiede troppi controlli condizionali. Per esempio, una prenotazione deve essere effettuata solo da uno studente; se la prenotazione puntasse direttamente a `Utente`, bisognerebbe controllare ogni volta che `Utente.ruolo = 'studente'`. Lo stesso problema si avrebbe per i lotti creati dagli operatori. Per questo motivo non è stata scelta.
-
-### Alternativa 2 — Accorpamento del padre nelle entità figlie
-
-In questa alternativa l'entità `Utente` viene eliminata e i suoi attributi vengono duplicati nelle tabelle figlie.
+In questa alternativa l'entità `Utente` viene eliminata e i suoi attributi comuni (nome, cognome, mail, password) vengono replicati in ciascuna delle entità figlie.
 
 Schema risultante:
 
@@ -258,294 +225,193 @@ OperatoreMensa(
   email,
   codice_operatore,
   mensa_id,
-  mansione
-)
-
-Amministratore(
-  id,
-  username,
-  password,
-  nome,
-  cognome,
-  email,
-  area_responsabilita
-)
-```
-
-Vantaggi:
-
-- ogni tabella contiene solo attributi coerenti con il proprio ruolo;
-- nessun valore `NULL` dovuto alla generalizzazione;
-- nessun join necessario per leggere il profilo completo;
-- le relazioni possono puntare direttamente a `Studente`, `OperatoreMensa` o `Amministratore`.
-
-Svantaggi:
-
-- ridondanza degli attributi comuni;
-- username, password, nome, cognome ed email sono ripetuti in tre tabelle;
-- difficoltà nel garantire l'unicità globale di username ed email;
-- per ottenere tutti gli utenti è necessario usare una `UNION`;
-- soluzione meno adatta al sistema di autenticazione standard di Django.
-
-Vincoli necessari:
-
-- username univoco tra Studente, OperatoreMensa e Amministratore;
-- email univoca tra Studente, OperatoreMensa e Amministratore.
-
-Giudizio: questa soluzione elimina i valori nulli, ma introduce ridondanza e problemi di coerenza. Non viene scelta perché Django lavora meglio con un modello utente centralizzato e perché la duplicazione degli attributi comuni renderebbe il sistema meno pulito.
-
-
-### Scelta effettuata — Alternativa ACCORPAMENTO DELLE ENTITA' FIGLIE NEL PADRE
-
-Tra le due alternative considerate è stata scelta l'**Alternativa 1**, cioè l'accorpamento delle specializzazioni nella tabella generale `Utente`.
-
-La soluzione finale prevede quindi una sola tabella per tutti gli utenti del sistema:
-
-```text
-Utente(
-  id_utente PK,
-  username UNIQUE,
-  password,
-  nome,
-  cognome,
-  email UNIQUE,
-  ruolo,
-  matricola NULL,
-  corso_studi NULL,
-  anno_corso NULL,
-  codice_operatore NULL,
-  mansione NULL,
-  area_responsabilita NULL,
-  id_mensa FK -> Mensa NULL
-)
-La distinzione tra studente, operatore mensa e amministratore viene gestita tramite il campo ruolo.
-
-Gli attributi specifici vengono utilizzati solo quando sono coerenti con il ruolo dell'utente:
-
-per uno studente vengono valorizzati matricola, corso_studi e anno_corso;
-per un operatore mensa vengono valorizzati codice_operatore, mansione e id_mensa;
-per un amministratore viene valorizzato area_responsabilita.
-Motivazione della scelta
-
-Questa soluzione è stata scelta perché permette di gestire tutti gli utenti in modo centralizzato.
-
-Nel progetto tutti gli utenti devono poter accedere al sistema tramite autenticazione. Avere una sola tabella Utente rende più semplice la gestione di login, credenziali e ruoli.
-
-Rispetto all'Alternativa B, questa scelta evita la duplicazione di dati comuni come username, password, nome, cognome ed email.
-
-Vantaggi:
--tutti gli utenti sono salvati in un'unica tabella;
--le credenziali non vengono duplicate;
--username ed email possono essere resi univoci in modo semplice;
--l'autenticazione è più immediata da gestire;
--il campo ruolo consente di distinguere facilmente i profili;
--la struttura rimane compatta e semplice da interrogare.
-
-Svantaggi:
--alcuni attributi possono assumere valore NULL;
--la tabella Utente contiene campi riferiti a ruoli diversi;
--alcuni vincoli dipendono dal valore del campo ruolo;
--la coerenza tra ruolo e attributi valorizzati deve essere controllata anche dall'applicazione.
-
-**Considerazione finale**
-
-L'Alternativa B avrebbe prodotto tabelle più separate e senza campi inutilizzati, ma avrebbe introdotto ridondanza e maggiore difficoltà nella gestione dell'autenticazione.
-
-Per questo motivo, nel contesto di UniFood Rescue, l'Alternativa A rappresenta il compromesso più adatto: accetta alcuni valori NULL, ma mantiene più semplice la gestione degli utenti e delle credenziali.
-
-La soluzione adottata è quindi:
-
-Utente unica + campo ruolo + attributi specifici opzionali
-```
-## 6. Modello logico relazionale
-
-```text
-Utente(
-  id,
-  username,
-  password,
-  first_name,
-  last_name,
-  email,
-  ruolo
-)
-
-Studente(
-  id,
-  utente_id [FK -> Utente, UNIQUE],
-  matricola,
-  corso_studi,
-  anno_corso,
-  data_registrazione
-)
-
-OperatoreMensa(
-  id,
-  utente_id [FK -> Utente, UNIQUE],
-  mensa_id [FK -> Mensa],
-  codice_operatore,
   mansione,
   data_assunzione
 )
 
 Amministratore(
   id,
-  utente_id [FK -> Utente, UNIQUE],
+  username,
+  password,
+  nome,
+  cognome,
+  email,
   area_responsabilita
 )
-
-Mensa(
-  id,
-  nome,
-  edificio,
-  indirizzo,
-  orario_apertura,
-  orario_chiusura,
-  attiva
-)
-
-CategoriaAlimento(
-  id,
-  nome,
-  descrizione
-)
-
-ProdottoAlimentare(
-  id,
-  categoria_id [FK -> CategoriaAlimento],
-  nome,
-  descrizione,
-  vegetariano,
-  vegano,
-  attivo
-)
-
-Allergene(
-  id,
-  nome,
-  descrizione
-)
-
-ProdottoAllergene(
-  prodotto_id [FK -> ProdottoAlimentare],
-  allergene_id [FK -> Allergene]
-)
-
-LottoInvenduto(
-  id,
-  mensa_id [FK -> Mensa],
-  prodotto_id [FK -> ProdottoAlimentare],
-  operatore_id [FK -> OperatoreMensa],
-  quantita_iniziale,
-  quantita_disponibile,
-  data_pubblicazione,
-  data_scadenza,
-  ora_inizio_ritiro,
-  ora_fine_ritiro,
-  prezzo_simbolico,
-  stato,
-  note
-)
-
-Prenotazione(
-  id,
-  studente_id [FK -> Studente],
-  lotto_id [FK -> LottoInvenduto],
-  quantita,
-  stato,
-  data_prenotazione
-)
-
-Ritiro(
-  id,
-  prenotazione_id [FK -> Prenotazione, UNIQUE],
-  operatore_id [FK -> OperatoreMensa],
-  data_ora_ritiro,
-  esito,
-  note
-)
-
-RecensioneMensa(
-  id,
-  studente_id [FK -> Studente],
-  mensa_id [FK -> Mensa],
-  prenotazione_id [FK -> Prenotazione, UNIQUE],
-  voto,
-  commento,
-  data_inserimento
-)
-
-Segnalazione(
-  id,
-  prenotazione_id [FK -> Prenotazione],
-  autore_id [FK -> Studente],
-  amministratore_id [FK -> Amministratore, NULL],
-  titolo,
-  descrizione,
-  stato,
-  esito,
-  data_apertura,
-  data_chiusura
-)
-
-
-Nota: in Django la relazione molti-a-molti tra `ProdottoAlimentare` e `Allergene` è implementata tramite modello esplicito `ProdottoAllergene`, con vincolo di unicità sulla coppia prodotto-allergene.
 ```
 
+Vantaggi:
+
+- ogni entità contiene solo attributi coerenti con il proprio ruolo;
+- non ci sono campi non valorizzati dovuti alla generalizzazione;
+- le relazioni possono puntare direttamente a `Studente`, `OperatoreMensa` o `Amministratore`;
+- la separazione concettuale tra i ruoli è molto chiara.
+
+Svantaggi:
+
+- gli attributi comuni vengono duplicati;
+- `username`, `password`, `nome`, `cognome` ed `email` sono ripetuti in più entità;
+- diventa più difficile garantire l'unicità globale di username ed email;
+- la gestione dell'autenticazione è meno centralizzata;
+- per ottenere tutti gli utenti della piattaforma sarebbe necessario unire più insiemi di dati;
+- la soluzione è meno adatta a un'applicazione Django basata su un modello utente centrale.
+
+Questa alternativa è utile se si vuole privilegiare la separazione netta tra ruoli ed evitare attributi non utilizzati. Tuttavia, introduce ridondanza negli attributi comuni degli account.
+
+---
+
+### Alternativa 2 — Accorpamento delle entità figlie nel padre
+
+In questa alternativa si mantiene una sola entità `Utente`, nella quale vengono mantenuti gli attributi comuni di Utente e aggiunti quelli specifici di ogni singolo ruolo.
+
+L'attributo fondamentale è:
+
+```text
+ruolo ∈ {studente, operatore_mensa, amministratore}
+```
+
+Il ruolo non viene considerato un semplice attributo descrittivo, ma un **attributo discriminante**. Esso determina il tipo dell'utente e vincola i suoi permessi e le azioni abilitate.
+
+Vincoli sul ruolo:
+
+```text
+ruolo = studente:
+PRENOTAZIONE, RECENSIONE, APERTURA
+
+ruolo = operatore_mensa:
+PUBBLICAZIONE, ASSEGNAZIONE
+
+ruolo = amministratore:
+GESTIONE
+```
+
+Schema concettuale risultante:
+
+```text
+Utente(
+  id,
+  username,
+  password,
+  nome,
+  cognome,
+  email,
+  ruolo,
+  matricola,
+  corso_studi,
+  anno_corso,
+  data_registrazione,
+  codice_operatore,
+  mansione,
+  data_assunzione,
+  mensa_id,
+  area_responsabilita
+)
+```
+
+Vantaggi:
+
+- tutti gli utenti sono gestiti tramite un'unica entità;
+- username, password ed email non vengono duplicati;
+- l'autenticazione è centralizzata;
+- il ruolo permette di distinguere le funzionalità disponibili;
+- l'unicità di username ed email è più semplice da garantire;
+- la struttura rispecchia meglio il fatto che tutti gli attori accedono alla stessa piattaforma.
+
+Svantaggi:
+
+- alcuni attributi specifici possono essere nulli;
+- l'entità `Utente` diventa più ampia;
+- servono vincoli basati sul valore di `ruolo`;
+- la coerenza tra ruolo e attributi valorizzati deve essere controllata anche dall'applicazione.
+
+---
+
+### Scelta effettuata — Accorpamento delle entità figlie nel padre
+
+Tra le due alternative considerate è stata scelta l'**Alternativa 2**, cioè l'accorpamento delle specializzazioni nell'entità generale `Utente`.
+
+Il ruolo è un attributo fondamentale, perché determina il comportamento dell'utente nel sistema. Tuttavia, poiché studenti, operatori e amministratori condividono lo stesso meccanismo di accesso, si è preferito mantenerli all'interno dell'unica entità `Utente`, usando `ruolo` come attributo discriminante.
+
+Quindi, `Utente` rappresenta l'identità di accesso comune, mentre l'attributo `ruolo` permette di distinguere le funzionalità disponibili.
+
+Questa scelta evita la duplicazione di dati comuni come:
+
+- username;
+- password;
+- nome;
+- cognome;
+- email.
+
+Accetta invece la presenza di alcuni attributi specifici NULL per tutti i ruoli.
+
+La soluzione adottata dal punto di vista concettuale è quindi:
+
+```text
+Utente unica + campo ruolo + attributi specifici condizionati dal ruolo
+```
+
+Dal punto di vista implementativo Django, il progetto mantiene comunque una struttura coerente con l'autenticazione centralizzata: `Utente` rimane il modello principale di account, mentre i profili specifici (`Studente`, `OperatoreMensa`, `Amministratore`) sono collegati tramite relazione uno-a-uno. Questa scelta consente di conservare il vantaggio dell'account unico, mantenendo al tempo stesso più ordinati gli attributi specifici dei ruoli.
+
+---
+
+## 6. Modello logico relazionale
+
+```text
+UTENTE(i̲d̲_̲u̲t̲e̲n̲t̲e̲, username, password, first_name, last_name, email, ruolo, matricola, corso_studi, anno_corso, data_registrazione, codice_operatore, mansione, data_assunzione, area_responsabilita, id_mensa: MENSA)
+
+MENSA(i̲d̲_̲m̲e̲n̲s̲a̲, nome, edificio, indirizzo, orario_apertura, orario_chiusura, attiva)
+
+PRENOTAZIONE(i̲d̲_̲p̲r̲e̲n̲o̲t̲a̲z̲i̲o̲n̲e̲, id_studente: UTENTE, id_lotto: LOTTO_INVENDUTO, quantita, stato, data_prenotazione, esito_ritiro, data_ora_ritiro)
+
+LOTTO_INVENDUTO(i̲d̲_̲l̲o̲t̲t̲o̲, id_mensa: MENSA, id_prodotto: PRODOTTO_ALIMENTARE, id_operatore: UTENTE, quantita_iniziale, quantita_disponibile, data_pubblicazione, data_scadenza, ora_inizio_ritiro, ora_fine_ritiro, prezzo_simbolico, stato, note)
+
+PRODOTTO_ALIMENTARE(i̲d̲_̲p̲r̲o̲d̲o̲t̲t̲o̲, nome, descrizione, vegetariano, vegano, attivo)
+
+ALLERGENE(i̲d̲_̲a̲l̲l̲e̲r̲g̲e̲n̲e̲, nome, descrizione)
+
+CONTENUTO(i̲d̲_̲p̲r̲o̲d̲o̲t̲t̲o̲:̲ ̲P̲R̲O̲D̲O̲T̲T̲O̲_̲A̲L̲I̲M̲E̲N̲T̲A̲R̲E̲, i̲d̲_̲a̲l̲l̲e̲r̲g̲e̲n̲e̲:̲ ̲A̲L̲L̲E̲R̲G̲E̲N̲E̲)
+
+RECENSIONE(i̲d̲_̲r̲e̲c̲e̲n̲s̲i̲o̲n̲e̲, id_studente: UTENTE, id_mensa: MENSA, id_prenotazione: PRENOTAZIONE, voto, commento, data_inserimento)
+
+SEGNALAZIONE(i̲d̲_̲s̲e̲g̲n̲a̲l̲a̲z̲i̲o̲n̲e̲, id_prenotazione: PRENOTAZIONE, id_autore: UTENTE, id_amministratore: UTENTE, titolo, descrizione, stato, esito, data_apertura, data_chiusura)
+```
+
+Nota: in Django la relazione molti-a-molti tra `ProdottoAlimentare` e `Allergene` è implementata tramite modello esplicito `ProdottoAllergene`, con vincolo di unicità sulla coppia prodotto-allergene.
+
+---
 
 ## 7. Vincoli del sistema
 
-### 7.1 Vincoli sulla generalizzazione
+### 7.1 Vincoli su Utente
 
-- Ogni `Utente` deve essere associato a uno e un solo profilo tra `Studente`, `OperatoreMensa` e `Amministratore`.
-- `Studente.utente_id` deve essere univoco.
-- `OperatoreMensa.utente_id` deve essere univoco.
-- `Amministratore.utente_id` deve essere univoco.
+- Ogni `Utente` possiede un solo ruolo.
 - Il campo `Utente.ruolo` può assumere solo i valori:
   - `studente`
   - `operatore_mensa`
   - `amministratore`
+- Il ruolo determina quali operazioni l'utente può eseguire.
+- Solo uno studente può prenotare lotti, scrivere recensioni e aprire segnalazioni.
+- Solo un operatore mensa può pubblicare lotti ed essere assegnato a una mensa.
+- Solo un amministratore può gestire segnalazioni amministrative.
+- `Studente.utente_id` deve essere univoco.
+- `OperatoreMensa.utente_id` deve essere univoco.
+- `Amministratore.utente_id` deve essere univoco.
 
-### 7.2 Vincoli su Mensa e OperatoreMensa
-
-- Ogni `OperatoreMensa` deve essere associato a una `Mensa`.
-- Una `Mensa` può avere più operatori.
-- Un operatore può creare lotti solo per la mensa a cui è associato.
-- Una mensa inattiva non può pubblicare nuovi lotti disponibili.
-- L'orario di chiusura deve essere successivo all'orario di apertura.
-
-### 7.3 Vincoli su prodotti, categorie e allergeni
-
-- Ogni `ProdottoAlimentare` deve appartenere a una categoria.
-- Una categoria può contenere molti prodotti.
-- Un prodotto può avere zero, uno o più allergeni.
-- Lo stesso allergene può essere associato a molti prodotti.
-- Non deve esistere due volte la stessa associazione prodotto-allergene.
-- Il nome di una categoria deve essere univoco.
-- Il nome di un allergene deve essere univoco.
-- Un prodotto vegano deve essere anche vegetariano.
-
-Vincoli consigliati o implementati:
-
-```text
-CategoriaAlimento.nome UNIQUE
-Allergene.nome UNIQUE
-ProdottoAllergene(prodotto_id, allergene_id) UNIQUE
-ProdottoAlimentare(categoria_id, nome) UNIQUE
-```
-
-### 7.4 Vincoli sui lotti invenduti
+### 7.2 Vincoli sui lotti invenduti
 
 - Ogni lotto deve essere associato a una mensa.
 - Ogni lotto deve essere associato a un prodotto alimentare.
-- Ogni lotto deve essere creato da un operatore mensa.
+- Ogni lotto deve essere pubblicato da un operatore mensa.
+- Il codice lotto è generato automaticamente in forma breve, ad esempio `L-0001`.
 - `quantita_iniziale` deve essere maggiore di zero.
 - `quantita_disponibile` non può essere negativa.
 - `quantita_disponibile` non può essere maggiore di `quantita_iniziale`.
 - `data_scadenza` non può essere precedente alla data di pubblicazione.
 - `ora_fine_ritiro` deve essere successiva a `ora_inizio_ritiro`.
 - Un lotto esaurito, chiuso, scaduto o annullato non può ricevere nuove prenotazioni.
-- Un operatore non può creare lotti per una mensa diversa dalla propria.
+- Un operatore non può pubblicare lotti per una mensa diversa dalla propria.
+- Il lotto è nello stato `disponibile` se la finestra di ritiro è valida ed attuale e la quantità è maggiore di zero.
+- La quantità disponibile è modificabile dall'operatore, ma non può superare la quantità iniziale.
 
 Stati possibili del lotto:
 
@@ -554,6 +420,27 @@ Stati possibili del lotto:
 - `chiuso`
 - `scaduto`
 - `annullato`
+- 
+### 7.3 Vincoli su Mensa e OperatoreMensa
+
+- Ogni `OperatoreMensa` deve essere associato a una `Mensa`.
+- Una `Mensa` può avere più operatori.
+- Un operatore può pubblicare lotti solo per la mensa a cui è associato.
+
+### 7.4 Vincoli su prodotti e allergeni
+
+- Un prodotto può avere zero, uno o più allergeni.
+- Lo stesso allergene può essere contenuto in più prodotti.
+- Il nome di un allergene è il suo identificativo e deve essere univoco.
+
+Vincoli implementati:
+
+```text
+Allergene.nome UNIQUE
+ProdottoAllergene(prodotto_id, allergene_id) UNIQUE
+ProdottoAlimentare(categoria_id, nome) UNIQUE
+```
+
 
 ### 7.5 Vincoli sulle prenotazioni
 
@@ -561,19 +448,26 @@ Stati possibili del lotto:
 - Ogni prenotazione deve essere associata a un lotto esistente.
 - La quantità prenotata deve essere maggiore di zero.
 - La quantità prenotata non può superare la quantità disponibile del lotto.
+- La quantità massima prenotabile per singola operazione è 99.
 - Uno studente non può prenotare un lotto scaduto.
 - Uno studente non può prenotare un lotto annullato.
 - Uno studente non può prenotare un lotto chiuso.
-- Una prenotazione ritirata non può essere annullata.
+- Una prenotazione ritirata o non ritirata non può essere annullata.
 - Quando viene creata una prenotazione attiva, la quantità disponibile del lotto diminuisce.
 - Quando una prenotazione attiva viene annullata, la quantità viene restituita al lotto.
+- Se una prenotazione attiva supera la fascia oraria senza conferma, viene considerata `non_ritirata`.
 
 Esempio:
 
 ```text
+quantita_iniziale = 8
 quantita_disponibile = 8
-prenotazione = 2
-nuova quantita_disponibile = 6
+
+prenotazione Mario Rossi = 1
+nuova quantita_disponibile = 7
+
+altra prenotazione Mario Rossi = 2
+nuova quantita_disponibile = 5
 ```
 
 Questa operazione viene gestita in modo atomico, perché riguarda sia la creazione della prenotazione sia l'aggiornamento del lotto.
@@ -583,16 +477,19 @@ Stati possibili della prenotazione:
 - `attiva`
 - `annullata`
 - `ritirata`
+- `non_ritirata`
 - `scaduta`
 
 ### 7.6 Vincoli sui ritiri
 
 - Ogni ritiro deve riferirsi a una prenotazione.
 - Una prenotazione può avere al massimo un ritiro.
-- Ogni ritiro deve essere confermato da un operatore mensa.
+- Ogni ritiro completato deve essere confermato da un operatore mensa.
 - Il ritiro può essere confermato solo se la prenotazione è attiva.
+- Il ritiro può essere confermato solo durante la fascia oraria prevista.
 - Dopo il ritiro, la prenotazione passa allo stato `ritirata` se l'esito è `consegnato`.
 - L'operatore può confermare solo ritiri relativi alla propria mensa.
+- Il mancato ritiro viene gestito automaticamente quando la fascia oraria scade senza conferma.
 
 Esiti possibili del ritiro:
 
@@ -600,17 +497,22 @@ Esiti possibili del ritiro:
 - `non_consegnato`
 - `annullato`
 
+Nel flusso principale l'operatore usa direttamente l'azione `Segna ritirata`; il non ritiro deriva automaticamente dalla scadenza della fascia oraria.
+
 ### 7.7 Vincoli sulle recensioni
 
 - Una recensione deve essere scritta da uno studente.
 - Una recensione deve riferirsi a una mensa.
 - Una recensione deve essere collegata a una prenotazione.
 - Lo studente può recensire una mensa solo dopo un ritiro completato.
+- Il voto è obbligatorio.
 - Il voto deve essere compreso tra 1 e 5.
+- Il voto viene selezionato tramite scelta vincolata, non tramite numero libero.
+- Il commento è opzionale.
 - Uno studente non può recensire due volte la stessa prenotazione.
 - La recensione deve riguardare la mensa associata al lotto prenotato.
 
-ESEMPIO CONCRETO: 
+Esempio concreto:
 
 ```text
 voto BETWEEN 1 AND 5
@@ -636,28 +538,50 @@ Stati possibili della segnalazione:
 
 ---
 
-## 9. Stati del dominio
+## 8. Stati del dominio
 
-### 9.1 Stati del LottoInvenduto
+### 8.1 Stati del LottoInvenduto
 
 | Stato | Significato |
 |---|---|
 | `disponibile` | Il lotto è visibile agli studenti e può essere prenotato. |
 | `esaurito` | La quantità disponibile è arrivata a zero. |
 | `chiuso` | L'operatore ha chiuso manualmente il lotto. |
-| `scaduto` | La data di scadenza o la fascia utile sono superate. |
+| `scaduto` | La data di ritiro o la fascia utile sono superate. |
 | `annullato` | Il lotto è stato annullato per errore o problema operativo. |
 
-### 9.2 Stati della Prenotazione
+### 8.2 Stati della Prenotazione
 
 | Stato | Significato |
 |---|---|
-| `attiva` | La prenotazione è valida e il prodotto deve ancora essere ritirato. |
-| `annullata` | La prenotazione è stata annullata. |
+| `attiva` | La prenotazione è valida ma non ancora conclusa. |
+| `annullata` | La prenotazione è stata annullata dallo studente. |
 | `ritirata` | Lo studente ha ritirato il prodotto e l'operatore ha confermato il ritiro. |
-| `scaduta` | La prenotazione non è stata ritirata entro la fascia prevista. |
+| `non_ritirata` | La fascia di ritiro è terminata senza conferma del ritiro. |
+| `scaduta` | Stato utilizzabile per indicare una prenotazione non più valida temporalmente. |
 
-### 9.3 Stati della Segnalazione
+### 8.3 Stati interfaccia della Prenotazione
+
+Gli stati interfaccia non sostituiscono gli stati del dominio, ma servono a comunicare meglio la situazione all'utente.
+
+| Stato visualizzato | Significato |
+|---|---|
+| `Ritiro programmato` | Il ritiro è futuro. |
+| `Pronta da ritirare` | Per lo studente: siamo dentro la fascia oraria di ritiro. |
+| `In attesa di ritiro` | Per l'operatore: siamo dentro la fascia oraria e lo studente può presentarsi. |
+| `Ritirata` | La prenotazione è stata conclusa positivamente. |
+| `Non ritirata` | La prenotazione non è stata ritirata entro la fascia prevista. |
+| `Annullata` | La prenotazione è stata annullata. |
+
+Graficamente, gli stati sono distinti anche per peso visivo:
+
+- `Ritiro programmato`: badge blu chiaro;
+- `Pronta da ritirare` / `In attesa di ritiro`: badge verde chiaro;
+- `Ritirata`: badge verde pieno;
+- `Non ritirata`: badge rosso;
+- `Annullata`: badge chiaro con bordo.
+
+### 8.4 Stati della Segnalazione
 
 | Stato | Significato |
 |---|---|
@@ -669,9 +593,9 @@ Stati possibili della segnalazione:
 
 ---
 
-## 10. Scelte progettuali rilevanti
+## 9. Scelte progettuali rilevanti
 
-### 10.1 LottoInvenduto come entità centrale
+### 9.1 LottoInvenduto come entità centrale
 
 La scelta più importante del progetto è modellare il `LottoInvenduto` come entità autonoma.
 
@@ -686,7 +610,33 @@ Questa separazione è fondamentale perché lo stesso prodotto può essere presen
 
 Senza questa distinzione, il sistema sarebbe una semplice lista di pasti. Con questa distinzione, invece, diventa un sistema informativo capace di gestire disponibilità concrete, temporanee e tracciabili.
 
-### 10.2 Separazione tra ProdottoAlimentare e LottoInvenduto
+### 9.2 Codice unico del lotto
+
+Il sistema usa un solo codice visibile:
+
+```text
+L-0001
+```
+
+Questo codice identifica il lotto.
+
+Non vengono usati codici separati per prenotazione, ritiro o pubblicazione. La scelta evita confusione nell'interfaccia e mantiene una corrispondenza universale:
+
+```text
+L-0001 = stesso lotto in tutte le pagine
+```
+
+Lo stesso codice compare in:
+
+- lotti pubblicati;
+- ritiri da confermare;
+- storico ritiri;
+- prenotazioni dello studente;
+- dashboard operatore.
+
+Il prefisso `L` indica il lotto e il numero deriva dall'identificativo del record.
+
+### 9.3 Separazione tra ProdottoAlimentare e LottoInvenduto
 
 `ProdottoAlimentare` descrive il tipo di alimento.
 
@@ -696,7 +646,7 @@ Questa scelta permette di evitare duplicazioni. Senza questa separazione, ogni v
 
 Separando le due entità, il prodotto viene registrato una sola volta e può essere riutilizzato in più lotti.
 
-### 10.3 Gestione molti-a-molti degli allergeni
+### 9.4 Gestione molti-a-molti degli allergeni
 
 Gli allergeni non vengono salvati come campi booleani dentro `ProdottoAlimentare`.
 
@@ -726,14 +676,14 @@ Questa scelta è migliore perché:
 
 Dal punto di vista del progetto di basi di dati, questa relazione è significativa perché introduce una classica relazione molti-a-molti risolta tramite tabella associativa.
 
-### 10.4 Quantità disponibile salvata nel lotto
+### 9.5 Quantità disponibile salvata nel lotto
 
 Il campo `quantita_disponibile` viene salvato direttamente nel lotto.
 
-Questa è una piccola ridondanza controllata, perché teoricamente la quantità disponibile potrebbe essere calcolata così:
+Questa è una ridondanza controllata, perché teoricamente la quantità disponibile potrebbe essere calcolata così:
 
 ```text
-quantita_disponibile = quantita_iniziale - somma(prenotazioni attive/ritirate)
+quantita_disponibile = quantita_iniziale - somma(prenotazioni attive/ritirate/non_ritirate)
 ```
 
 Tuttavia, per semplicità implementativa e chiarezza applicativa, viene mantenuto un campo dedicato.
@@ -742,7 +692,37 @@ Questa scelta richiede un vincolo applicativo: quando si crea o annulla una pren
 
 Per evitare inconsistenze, l'aggiornamento viene gestito in transazione atomica.
 
-### 10.5 Nessuna gestione dei pagamenti online
+### 9.6 Disponibilità e non ritirati
+
+Una prenotazione non ritirata non restituisce automaticamente la quantità al lotto.
+
+Questa scelta è realistica: se lo studente non si presenta entro la fascia oraria, la porzione potrebbe non essere più recuperabile, potrebbe essere scaduta o gestita diversamente dalla mensa.
+
+Quindi:
+
+```text
+ritirata + non_ritirata = quantità non più disponibile
+```
+
+Esempio:
+
+```text
+quantità iniziale = 8
+ritirata = 1
+non_ritirata = 2
+
+quantità disponibile = 5
+```
+
+Nella pagina dei lotti pubblicati può quindi apparire:
+
+```text
+5/8 disponibili
+```
+
+e nello storico ritiri/prenotazioni si vedono le quantità che giustificano la differenza.
+
+### 9.7 Nessuna gestione dei pagamenti online
 
 Il progetto non gestisce pagamenti reali.
 
@@ -759,26 +739,31 @@ Questa scelta evita complessità inutili come:
 
 Il focus rimane sul database e sulla gestione dei processi informativi.
 
-### 10.6 Ritiro come entità autonoma
+### 9.8 Ritiro e conferma operatore
 
-Il ritiro viene modellato come entità separata da `Prenotazione`.
+Nel modello implementativo è presente il concetto di ritiro confermato dall'operatore.
 
-Questa scelta è importante perché:
+La conferma del ritiro viene semplificata nell'interfaccia: l'operatore non passa più da una pagina intermedia con scelta manuale di più esiti e note, ma usa direttamente l'azione `Segna ritirata`.
 
-- una prenotazione può esistere senza essere ancora ritirata;
-- il ritiro ha dati propri: operatore, data/ora, esito e note;
-- si può distinguere tra prenotazione attiva e ritiro completato;
-- si mantiene uno storico preciso delle consegne effettivamente avvenute.
+Il non ritiro non viene gestito manualmente dall'operatore: viene determinato automaticamente quando la fascia oraria termina senza conferma.
 
-Se il ritiro fosse solo uno stato della prenotazione, si perderebbero informazioni importanti sull'operatore che ha confermato la consegna e sull'esito del ritiro.
+Questa scelta rende più chiaro il flusso operativo:
 
-### 10.7 Recensione vincolata al ritiro
+```text
+ritiro effettivo -> operatore segna ritirata
+mancato ritiro -> sistema segna non_ritirata automaticamente
+annullamento -> azione dello studente prima del ritiro
+```
+
+### 9.9 Recensione vincolata al ritiro
 
 La recensione può essere lasciata solo dopo un ritiro completato.
 
 Questa scelta evita recensioni non motivate da un'esperienza reale. Uno studente può valutare una mensa solo se ha effettivamente prenotato e ritirato un lotto presso quella mensa.
 
-### 12.8 Segnalazioni collegate alla prenotazione
+Il voto è obbligatorio e deve essere compreso tra 1 e 5. Il commento è opzionale.
+
+### 9.10 Segnalazioni collegate alla prenotazione
 
 La segnalazione viene collegata alla prenotazione, non direttamente alla mensa o al prodotto.
 
@@ -794,36 +779,47 @@ Questa scelta è utile perché una prenotazione identifica già:
 
 In questo modo ogni segnalazione è contestualizzata e può essere analizzata dall'amministratore con tutti i dati necessari.
 
-### 10.9 Ruoli separati e controlli applicativi
+### 9.11 Ruolo come attributo discriminante
 
-La presenza di tre ruoli rende il sistema più realistico:
+La presenza dei tre ruoli rende il sistema più realistico:
 
-- lo studente non deve poter creare lotti;
+- lo studente non deve poter pubblicare lotti;
 - l'operatore non deve poter gestire segnalazioni amministrative di sistema;
 - l'amministratore non partecipa direttamente al processo di prenotazione e ritiro, ma supervisiona il sistema.
 
+Nel modello concettuale scelto, il ruolo viene trattato come attributo discriminante. Non è un semplice campo descrittivo: determina quali relazioni l'utente può avere nel sistema.
+
 Questa separazione permette di dimostrare competenze non solo nella progettazione del database, ma anche nella gestione dei permessi applicativi.
 
-### 10.10 Dashboard e statistiche come valore informativo
+### 9.12 Dashboard e statistiche come valore informativo
 
 La dashboard non è solo un elemento grafico, ma rappresenta una parte importante del sistema informativo.
 
-Attraverso le statistiche si possono monitorare:
+Sono previste dashboard diverse per studenti, operatori e amministratori.
 
-- numero di lotti pubblicati;
-- numero di porzioni prenotate;
-- numero di porzioni ritirate;
-- quantità recuperate per mensa;
-- segnalazioni aperte;
-- valutazione media delle mense.
+La home pubblica, senza accesso, mostra solo dati pubblici:
 
-Questi dati mostrano il valore del sistema: non solo registrare operazioni, ma trasformarle in informazioni utili.
+- lotti disponibili;
+- porzioni disponibili;
+- mense disponibili.
+
+Non mostra dati personali o già associati a prenotazioni specifiche.
+
+L'area operatore, invece, mostra dati operativi della propria mensa:
+
+- lotti disponibili;
+- porzioni disponibili;
+- ritiri da confermare;
+- ritiri confermati;
+- lotti pubblicati di recente.
+
+Questa separazione evita che la home pubblica mostri dati legati a specifici utenti, come le porzioni già ritirate da uno studente.
 
 ---
 
-## 11. Query SQL significative
+## 10. Query SQL significative
 
-### 11.1 Ricerca dei lotti disponibili per mensa
+### 10.1 Ricerca dei lotti disponibili per mensa
 
 ```sql
 SELECT l.id, p.nome, l.quantita_disponibile, l.ora_inizio_ritiro, l.ora_fine_ritiro
@@ -835,7 +831,7 @@ AND l.stato = 'disponibile'
 AND l.quantita_disponibile > 0;
 ```
 
-### 11.2 Ricerca dei lotti che non contengono un certo allergene
+### 10.2 Ricerca dei lotti che non contengono un certo allergene
 
 Esempio: prodotti senza lattosio.
 
@@ -854,7 +850,7 @@ AND p.id NOT IN (
 );
 ```
 
-### 11.3 Storico prenotazioni di uno studente
+### 10.3 Storico prenotazioni di uno studente
 
 ```sql
 SELECT pr.id, p.nome, m.nome AS mensa, pr.quantita, pr.stato, pr.data_prenotazione
@@ -866,20 +862,22 @@ WHERE pr.studente_id = 1
 ORDER BY pr.data_prenotazione DESC;
 ```
 
-### 11.4 Prenotazioni da ritirare per una mensa
+### 10.4 Prenotazioni attive da ritirare per una mensa
 
 ```sql
-SELECT pr.id, u.first_name, u.last_name, p.nome, pr.quantita
+SELECT pr.id, u.first_name, u.last_name, p.nome, pr.quantita, l.data_scadenza,
+       l.ora_inizio_ritiro, l.ora_fine_ritiro
 FROM Prenotazione pr
 JOIN Studente s ON pr.studente_id = s.id
 JOIN Utente u ON s.utente_id = u.id
 JOIN LottoInvenduto l ON pr.lotto_id = l.id
 JOIN ProdottoAlimentare p ON l.prodotto_id = p.id
 WHERE l.mensa_id = 1
-AND pr.stato = 'attiva';
+AND pr.stato = 'attiva'
+ORDER BY l.data_scadenza, l.ora_inizio_ritiro;
 ```
 
-### 11.5 Porzioni recuperate per mensa
+### 10.5 Porzioni ritirate per mensa
 
 ```sql
 SELECT m.nome, SUM(pr.quantita) AS porzioni_ritirate
@@ -891,7 +889,7 @@ WHERE pr.stato = 'ritirata'
 GROUP BY m.nome;
 ```
 
-### 11.6 Media recensioni per mensa
+### 10.6 Media recensioni per mensa
 
 ```sql
 SELECT m.nome, AVG(rm.voto) AS voto_medio
@@ -900,7 +898,7 @@ JOIN Mensa m ON rm.mensa_id = m.id
 GROUP BY m.nome;
 ```
 
-### 11.7 Segnalazioni aperte o in carico
+### 10.7 Segnalazioni aperte o in carico
 
 ```sql
 SELECT s.id, s.titolo, s.stato, s.data_apertura
@@ -909,7 +907,7 @@ WHERE s.stato IN ('aperta', 'in_carico')
 ORDER BY s.data_apertura ASC;
 ```
 
-### 11.8 Lotti più richiesti
+### 10.8 Lotti più richiesti
 
 ```sql
 SELECT p.nome, COUNT(pr.id) AS numero_prenotazioni
@@ -920,19 +918,34 @@ GROUP BY p.nome
 ORDER BY numero_prenotazioni DESC;
 ```
 
-### 11.9 Quantità non recuperata stimata
+### 10.9 Quantità non recuperata stimata
 
 ```sql
-SELECT m.nome, SUM(l.quantita_disponibile) AS quantita_non_ritirata
-FROM LottoInvenduto l
+SELECT m.nome, SUM(pr.quantita) AS quantita_non_ritirata
+FROM Prenotazione pr
+JOIN LottoInvenduto l ON pr.lotto_id = l.id
 JOIN Mensa m ON l.mensa_id = m.id
-WHERE l.stato IN ('scaduto', 'chiuso')
+WHERE pr.stato = 'non_ritirata'
 GROUP BY m.nome;
 ```
 
+### 10.10 Giustificazione quantità disponibile di un lotto
+
+```sql
+SELECT
+    l.id,
+    l.quantita_iniziale,
+    l.quantita_disponibile,
+    SUM(CASE WHEN pr.stato = 'ritirata' THEN pr.quantita ELSE 0 END) AS quantita_ritirata,
+    SUM(CASE WHEN pr.stato = 'non_ritirata' THEN pr.quantita ELSE 0 END) AS quantita_non_ritirata,
+    SUM(CASE WHEN pr.stato = 'attiva' THEN pr.quantita ELSE 0 END) AS quantita_da_ritirare
+FROM LottoInvenduto l
+LEFT JOIN Prenotazione pr ON pr.lotto_id = l.id
+WHERE l.id = 1
+GROUP BY l.id, l.quantita_iniziale, l.quantita_disponibile;
+```
+
 ---
-
-
 
 ## 11. Struttura del repository
 
@@ -960,13 +973,14 @@ GROUP BY m.nome;
 │   └── registration/
 │
 ├── static/css/                 # stile CSS personalizzato
-│   └── style.css
+│   └── site.css
 │
 ├── fixtures/                   # dati iniziali di esempio
 │   └── initial_data.json
 │
 ├── docs/                       # documentazione tecnica
 │   ├── relazione.md
+│   ├── alternative_generalizzazione.md
 │   ├── er_diagram.mmd
 │   ├── query_significative.sql
 │   └── security_bonus.md
@@ -979,41 +993,62 @@ GROUP BY m.nome;
 
 ---
 
-## 18. Organizzazione delle pagine
+## 12. Organizzazione delle pagine
 
-### 18.1 Area pubblica
+### 12.1 Area pubblica
 
 - Home page
 - Catalogo lotti disponibili
 - Dettaglio lotto
+- Recensioni mense
 - Login
 - Registrazione
 
-### 18.2 Area studente
+La home pubblica mostra solo informazioni generali:
+
+- lotti disponibili;
+- porzioni disponibili;
+- mense disponibili.
+
+Non mostra dati personali o collegati a specifici studenti.
+
+### 12.2 Area studente
 
 - Dashboard studente
-- Profilo personale
 - Catalogo lotti
 - Dettaglio lotto
 - Prenota lotto
 - Le mie prenotazioni
 - Annulla prenotazione attiva
-- Storico ritiri
-- Recensioni lasciate
+- Le mie recensioni
+- Dettaglio recensione
 - Apri segnalazione
 
-### 18.3 Area operatore mensa
+Gli stati mostrati allo studente distinguono tra:
 
-- Dashboard operatore
-- Crea nuovo lotto
-- Gestisci lotti della mensa
+- `Ritiro programmato`, se la fascia è futura;
+- `Pronta da ritirare`, se siamo dentro la fascia oraria;
+- `Ritirata`, se l'operatore ha confermato il ritiro;
+- `Non ritirata`, se la fascia è scaduta senza conferma;
+- `Annullata`, se lo studente ha annullato.
+
+### 12.3 Area operatore mensa
+
+- Home operatore come dashboard operativa
+- Pubblica lotto
+- Lotti pubblicati
 - Modifica lotto
 - Chiudi lotto
-- Prenotazioni da ritirare
-- Conferma ritiro
-- Storico ritiri confermati
+- Ritiri da confermare
+- Segna ritirata
+- Storico ritiri
+- Recensioni mense
 
-### 18.4 Area amministratore
+L'operatore non visualizza la stessa home dello studente. Quando accede, vede una dashboard operativa della propria mensa.
+
+La voce principale è `Pubblica lotto`, perché l'operatore pubblica disponibilità, non effettua prenotazioni.
+
+### 12.4 Area amministratore
 
 - Dashboard amministratore
 - Gestione mense
@@ -1023,7 +1058,7 @@ GROUP BY m.nome;
 - Gestione segnalazioni
 - Statistiche recupero alimentare
 
-### 18.5 Area admin Django
+### 12.5 Area admin Django
 
 - Gestione utenti
 - Gestione studenti
@@ -1040,49 +1075,9 @@ GROUP BY m.nome;
 
 ---
 
-## 19. Requisiti implementativi coperti
+## 13. Bonus sicurezza
 
-Il progetto copre i requisiti principali richiesti da una consegna di sistema informativo:
-
-| Requisito | Stato | Dove si trova |
-|---|---:|---|
-| Analisi del dominio | Coperto | README + `docs/relazione.md` |
-| Modello E-R | Coperto | README + `docs/er_diagram.mmd` |
-| Generalizzazione/specializzazione | Coperto | Utente -> Studente / OperatoreMensa / Amministratore |
-| Progettazione logica | Coperto | README + modelli Django |
-| Vincoli di integrità | Coperto | `models.py`, form, viste, transazioni |
-| Backend Django | Coperto | progetto `unifoodrescue`, app `mensa` |
-| Template Django | Coperto | cartella `templates/` |
-| Bootstrap CSS | Coperto | template + `static/css/style.css` |
-| JavaScript non necessario | Coperto | applicazione basata su backend e template |
-| Dati di esempio / dump | Coperto | `fixtures/initial_data.json` |
-| Istruzioni di avvio | Coperto | sezione installazione |
-| Query significative | Coperto | README + `docs/query_significative.sql` |
-| Bonus sicurezza | Coperto | README + `docs/security_bonus.md` |
-
-Funzionalità minime effettivamente coperte:
-
-1. Modelli Django per tutte le entità principali.
-2. Autenticazione con distinzione tra studenti, operatori mensa e amministratori.
-3. CRUD delle mense.
-4. CRUD dei prodotti alimentari.
-5. Gestione categorie e allergeni.
-6. Associazione prodotti-allergeni.
-7. Creazione lotti da parte dell'operatore mensa.
-8. Ricerca e visualizzazione dei lotti disponibili.
-9. Prenotazione di un lotto da parte dello studente.
-10. Aggiornamento automatico della quantità disponibile.
-11. Conferma del ritiro da parte dell'operatore.
-12. Storico prenotazioni dello studente.
-13. Recensioni dopo ritiro completato.
-14. Apertura e gestione segnalazioni.
-15. Dashboard riepilogativa con statistiche semplici.
-
----
-
-## 20. Bonus sicurezza
-
-### 20.1 Simulazione SQL injection
+### 13.1 Simulazione SQL injection
 
 Una possibile simulazione riguarda la ricerca dei lotti o dei prodotti.
 
@@ -1112,7 +1107,7 @@ ProdottoAlimentare.objects.filter(nome__icontains=ricerca)
 
 In questo modo l'input dell'utente non viene concatenato manualmente alla query SQL. Il framework gestisce automaticamente la costruzione sicura della query.
 
-### 20.2 Simulazione brute-force
+### 13.2 Simulazione brute-force
 
 Un secondo esempio di attacco riguarda il login.
 
@@ -1130,25 +1125,25 @@ Misure di prevenzione:
 
 Il sistema di autenticazione di Django è adatto al progetto perché gestisce già hashing delle password, sessioni utente e protezione dei form.
 
-### 20.3 Protezioni applicative usate nel progetto
+### 13.3 Protezioni applicative usate nel progetto
 
 - Uso dell'ORM Django invece di query SQL concatenate manualmente.
 - Uso di `transaction.atomic()` per operazioni critiche su prenotazioni e quantità.
 - Uso di `select_for_update()` per ridurre il rischio di race condition nella prenotazione dei lotti.
 - Controlli sui ruoli tramite funzioni di permesso.
 - Vincoli nei modelli tramite `clean()` e validatori Django.
+- Validazione lato form per quantità, date, voto recensione e dati obbligatori.
 - Protezione CSRF nativa nei form Django.
+- Separazione tra pagine pubbliche e aree riservate per ruolo.
 
 ---
 
-## 21. Considerazioni finali
+## 14. Considerazioni finali
 
-**UniFood Rescue** rappresenta un sistema informativo completo e coerente con gli obiettivi di un progetto di Basi di Dati.
-
-Il dominio scelto permette di modellare:
+**UniFood Rescue** rappresenta un sistema completo e significativa con gli obiettivi:
 
 - utenti con ruoli differenti;
-- una generalizzazione/specializzazione significativa;
+- una generalizzazione/specializzazione coerente;
 - relazioni uno-a-molti;
 - relazioni molti-a-molti;
 - vincoli di integrità;
@@ -1159,31 +1154,19 @@ Il dominio scelto permette di modellare:
 - recensioni;
 - segnalazioni;
 - dashboard statistiche;
-- monitoraggio delle quantità recuperate.
-
-Il progetto è sufficientemente semplice da essere implementato con Django e SQLite, ma abbastanza ricco da mostrare competenze di progettazione concettuale, logica e applicativa.
+- monitoraggio delle quantità recuperate;
+- distinzione tra dati pubblici, dati studente e dati operatore.
 
 Il cuore del sistema è il seguente flusso:
 
-```text
-OperatoreMensa -> LottoInvenduto -> Prenotazione -> Ritiro -> Recensione / Segnalazione
-```
-
-Questa struttura rende il progetto chiaro, scalabile e collegato al tema del recupero delle eccedenze alimentari.
-
-Dal punto di vista dei dati, le parti più interessanti sono:
-
-- `ProdottoAlimentare` <-> `Allergene`
-- `Mensa` -> `LottoInvenduto`
-- `LottoInvenduto` -> `Prenotazione`
-- `Prenotazione` -> `Ritiro`
-- `Prenotazione` -> `Segnalazione`
-- `Mensa` -> `RecensioneMensa`
-
-La scelta di modellare `LottoInvenduto` come entità centrale rende il progetto più forte rispetto a una semplice piattaforma di prenotazione pasti, perché consente di gestire quantità, disponibilità, scadenza, mensa, prodotto, stato e tracciabilità.
-
-La presenza della relazione molti-a-molti tra prodotti e allergeni arricchisce ulteriormente il modello E-R e rende il sistema più realistico.
+- `Utente` con ruolo discriminante;
+- `ProdottoAlimentare` <-> `Allergene`;
+- `Mensa` -> `LottoInvenduto`;
+- `LottoInvenduto` -> `Prenotazione`;
+- `Prenotazione` -> `Ritiro`;
+- `Prenotazione` -> `Segnalazione`;
+- `Mensa` -> `RecensioneMensa`.
 
 Inoltre, l'introduzione di prenotazioni, ritiri, recensioni e segnalazioni permette di modellare un ciclo di vita completo del dato: dalla pubblicazione del lotto fino alla sua effettiva consegna o alla gestione di eventuali problemi.
 
-In conclusione, **UniFood Rescue** non è solo un'applicazione per prenotare cibo: è un sistema informativo che organizza un processo reale, riduce lo spreco, traccia le operazioni e trasforma dati semplici in informazioni utili per studenti, operatori e amministratori.
+La scelta sulla generalizzazione rafforza il progetto: il ruolo è un attributo fondamentale, perché determina il comportamento dell'utente nel sistema. Tuttavia, poiché studenti, operatori e amministratori condividono le stesse credenziali e lo stesso meccanismo di accesso, si è preferito mantenere una logica centrata sull'entità `Utente`, usando `ruolo` come attributo discriminante.
