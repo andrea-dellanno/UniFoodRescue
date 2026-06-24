@@ -1,6 +1,6 @@
 # UniFood Rescue
 
-> Sistema Django per la gestione e il recupero delle eccedenze alimentari nelle mense universitarie.
+> Sistema Django per la gestione delle eccedenze alimentari nelle mense universitarie.
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![Django](https://img.shields.io/badge/Django-darkgreen)
