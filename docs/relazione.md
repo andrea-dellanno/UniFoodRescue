@@ -41,10 +41,7 @@ La generalizzazione è totale e disgiunta: ogni utente deve avere un solo ruolo 
 Alternative valutate:
 
 1. Tutto in `Utente`: semplice ma produce molti `NULL` e vincoli condizionali.
-2. Solo tabelle figlie: elimina `NULL`, ma duplica username, email e password.
-3. Tabella padre + tabelle figlie: migliore normalizzazione e compatibilità con Django.
-
-Scelta: alternativa 3, implementata con `Utente(AbstractUser)` e profili 1:1.
+2. Solo tabelle figlie: elimina `NULL`, ma duplica username, email e password.- scelta effettuata.
 
 ## Modello logico
 
@@ -68,7 +65,6 @@ Segnalazione(id, prenotazione_id FK, autore_id FK, amministratore_id FK NULL, ti
 ## Cardinalità
 
 - Mensa 1:N OperatoreMensa.
-- CategoriaAlimento 1:N ProdottoAlimentare.
 - ProdottoAlimentare N:N Allergene tramite ProdottoAllergene.
 - Mensa 1:N LottoInvenduto.
 - ProdottoAlimentare 1:N LottoInvenduto.
