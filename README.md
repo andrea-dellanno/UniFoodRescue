@@ -1013,66 +1013,7 @@ La voce principale è `Pubblica lotto`, perché l'operatore pubblica disponibili
 
 ## 13. Bonus sicurezza
 
-### 13.1 Simulazione SQL injection
-
-Una possibile simulazione riguarda la ricerca dei lotti o dei prodotti.
-
-Codice vulnerabile:
-
-```python
-query = "SELECT * FROM ProdottoAlimentare WHERE nome LIKE '%" + ricerca + "%'"
-```
-
-Questo codice è pericoloso perché concatena direttamente l'input dell'utente nella query SQL.
-
-Un utente malevolo potrebbe inserire un input appositamente costruito per alterare la query.
-
-Esempio:
-
-```text
-' OR '1'='1
-```
-
-In questo modo la query potrebbe restituire più risultati del previsto o aggirare alcuni filtri.
-
-Prevenzione con Django ORM:
-
-```python
-ProdottoAlimentare.objects.filter(nome__icontains=ricerca)
-```
-
-In questo modo l'input dell'utente non viene concatenato manualmente alla query SQL. Il framework gestisce automaticamente la costruzione sicura della query.
-
-### 13.2 Simulazione brute-force
-
-Un secondo esempio di attacco riguarda il login.
-
-Un attaccante potrebbe provare molte password diverse per lo stesso account, tentando di indovinare le credenziali di uno studente, di un operatore mensa o di un amministratore.
-
-Misure di prevenzione:
-
-- password robuste;
-- hash delle password;
-- limitazione dei tentativi di login;
-- logging dei tentativi falliti;
-- uso del sistema di autenticazione Django;
-- messaggi di errore generici;
-- protezione CSRF nei form.
-
-Il sistema di autenticazione di Django è adatto al progetto perché gestisce già hashing delle password, sessioni utente e protezione dei form.
-
-### 13.3 Protezioni applicative usate nel progetto
-
-- Uso dell'ORM Django invece di query SQL concatenate manualmente.
-- Uso di `transaction.atomic()` per operazioni critiche su prenotazioni e quantità.
-- Uso di `select_for_update()` per ridurre il rischio di race condition nella prenotazione dei lotti.
-- Controlli sui ruoli tramite funzioni di permesso.
-- Vincoli nei modelli tramite `clean()` e validatori Django.
-- Validazione lato form per quantità, date, voto recensione e dati obbligatori.
-- Protezione CSRF nativa nei form Django.
-- Separazione tra pagine pubbliche e aree riservate per ruolo.
-
----
+Per l’approfondimento relativo al bonus sicurezza, si rimanda alla documentazione dedicata: [`docs/security_bonus.md`](docs/security_bonus.md).
 
 ## 14. Considerazioni finali
 
