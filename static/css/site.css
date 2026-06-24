@@ -1,0 +1,114 @@
+body { background: #f8f9fa; }
+
+.hero {
+  background: linear-gradient(135deg, #e9f7ef, #fff);
+  border: 1px solid #d1e7dd;
+  border-radius: 1rem;
+}
+
+.card-lotto {
+  min-height: 100%;
+}
+
+.badge-soft {
+  background: #e9f7ef;
+  color: #146c43;
+  border: 1px solid #badbcc;
+}
+
+.stat-card {
+  border-left: .35rem solid #198754;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+.service-hero {
+  background: linear-gradient(135deg, #eef9f1, #ffffff);
+  border: 1px solid #d6eadc;
+}
+
+.form-label {
+  font-weight: 600;
+}
+
+.invalid-feedback {
+  font-size: .875rem;
+}
+
+.card-lotto:hover {
+  transform: translateY(-2px);
+  transition: .15s ease-in-out;
+}
+
+.reviews-hero {
+  background: linear-gradient(135deg, #eef9f1, #ffffff);
+  border: 1px solid #d6eadc;
+}
+
+.rating-stars {
+  color: #198754;
+  letter-spacing: 1px;
+}
+
+.review-score {
+  font-size: 1.8rem;
+  line-height: 1;
+  font-weight: 700;
+  color: #198754;
+  white-space: nowrap;
+}
+
+.review-divider {
+  height: 1px;
+  background: #e9ecef;
+}
+
+.review-location-card {
+  transition: .15s ease-in-out;
+}
+
+.review-location-card:hover {
+  transform: translateY(-2px);
+}
+
+.review-item {
+  padding-bottom: .75rem;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.review-item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.review-progress {
+  height: 8px;
+  background: #edf2ef;
+}
+
+.review-rating-label {
+  width: 36px;
+  font-size: .875rem;
+  font-weight: 600;
+}
+
+.review-count {
+  width: 32px;
+  text-align: right;
+}
+
+.operator-hero {
+  background: linear-gradient(135deg, #eef9f1, #ffffff);
+  border: 1px solid #d6eadc;
+}
+
+.operator-action-card {
+  transition: .15s ease-in-out;
+}
+
+.operator-action-card:hover {
+  transform: translateY(-2px);
+}

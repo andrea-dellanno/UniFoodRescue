@@ -1,0 +1,63 @@
+<div class="col-md-6 col-xl-4">
+  <div class="card h-100 shadow-sm border-0 card-lotto">
+    <div class="card-body d-flex flex-column">
+      <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+        <div>
+          <h2 class="h5 mb-1">{{ lotto.prodotto.nome }}</h2>
+          <div class="text-muted small">
+            {{ lotto.mensa.nome }} · {{ lotto.prodotto.categoria.nome }}
+          </div>
+        </div>
+
+        <span class="badge text-bg-success">
+          {{ lotto.quantita_disponibile }} disponibili
+        </span>
+      </div>
+
+      <p class="small text-muted flex-grow-1 mb-3">
+        {% if lotto.prodotto.descrizione %}
+          {{ lotto.prodotto.descrizione|truncatewords:18 }}
+        {% else %}
+          Disponibile per il ritiro in mensa nella fascia indicata.
+        {% endif %}
+      </p>
+
+      <div class="small mb-3">
+        <div><strong>Ritiro:</strong> {{ lotto.ora_inizio_ritiro|time:'H:i' }} - {{ lotto.ora_fine_ritiro|time:'H:i' }}</div>
+        <div><strong>Disponibile fino al:</strong> {{ lotto.data_scadenza|date:'d/m/Y' }}</div>
+      </div>
+
+      <div class="mb-3">
+        {% if lotto.prodotto.vegetariano %}
+          <span class="badge text-bg-light border">Vegetariano</span>
+        {% endif %}
+
+        {% if lotto.prodotto.vegano %}
+          <span class="badge text-bg-light border">Vegano</span>
+        {% endif %}
+
+        {% for allergene in lotto.prodotto.allergeni.all %}
+          <span class="badge text-bg-warning">{{ allergene.nome }}</span>
+        {% empty %}
+          <span class="badge text-bg-light border">Nessun allergene indicato</span>
+        {% endfor %}
+      </div>
+
+      <div class="d-flex gap-2 mt-auto">
+        <a class="btn btn-outline-success btn-sm" href="{% url 'dettaglio_lotto' lotto.pk %}">
+          Dettagli
+        </a>
+
+        {% if user.is_authenticated and user.is_studente and lotto.is_prenotabile %}
+          <a class="btn btn-success btn-sm" href="{% url 'prenota_lotto' lotto.pk %}">
+            Prenota
+          </a>
+        {% elif not user.is_authenticated and lotto.is_prenotabile %}
+          <a class="btn btn-success btn-sm" href="{% url 'login' %}">
+            Accedi e prenota
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

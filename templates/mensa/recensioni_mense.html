@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}Recensioni mense · UniFood Rescue{% endblock %}
+
+{% block content %}
+<section class="reviews-hero rounded-4 shadow-sm p-4 p-lg-5 mb-4">
+  <div class="row align-items-center g-4">
+    <div class="col-lg-8">
+      <h1 class="display-6 fw-bold mb-0">
+        Leggi le recensioni lasciate dagli studenti e confronta le mense
+      </h1>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="border rounded-3 p-3 h-100">
+                <div class="text-muted small mb-1">Recensioni totali</div>
+                <div class="h3 mb-0">{{ stats.recensioni_totali|default:0 }}</div>
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="border rounded-3 p-3 h-100">
+                <div class="text-muted small mb-1">Mense con valutazioni</div>
+                <div class="h3 mb-0">{{ stats.mense_con_valutazioni|default:0 }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-3">
+  <div>
+    <p class="text-success fw-semibold mb-1">Mense</p>
+    <h2 class="h4 mb-0">Valutazioni per mensa</h2>
+  </div>
+
+  <form method="get" data-auto-review-filter>
+    <div>
+      <label class="form-label small mb-1" for="id_ordina">Ordina per</label>
+
+      <select class="form-select form-select-sm" name="ordina" id="id_ordina">
+        <option value="rating_desc" {% if ordina == 'rating_desc' %}selected{% endif %}>Valutazione più alta</option>
+        <option value="rating_asc" {% if ordina == 'rating_asc' %}selected{% endif %}>Valutazione più bassa</option>
+        <option value="recensioni_desc" {% if ordina == 'recensioni_desc' %}selected{% endif %}>Più recensioni</option>
+        <option value="nome_asc" {% if ordina == 'nome_asc' %}selected{% endif %}>Nome mensa A-Z</option>
+      </select>
+    </div>
+  </form>
+</div>
+
+<div class="row g-4">
+  {% for mensa in mense %}
+    <div class="col-lg-6">
+      <article class="card border-0 shadow-sm h-100 review-location-card">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div>
+              <h3 class="h5 mb-1">{{ mensa.nome }}</h3>
+              <p class="text-muted small mb-0">{{ mensa.indirizzo }}</p>
+            </div>
+
+            <div class="text-end">
+              <div class="review-score">★ {{ mensa.voto_medio|floatformat:1 }}</div>
+              <div class="text-muted small">
+                {{ mensa.numero_recensioni }} recensioni
+              </div>
+            </div>
+          </div>
+
+          <div class="review-divider mb-3"></div>
+
+          <div class="vstack gap-3">
+            {% for recensione in mensa.recensioni.all|slice:":3" %}
+              <div class="review-item">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-1">
+                  <div>
+                    <strong class="small">
+                      {{ recensione.studente.utente.get_full_name|default:recensione.studente.utente.username }}
+                    </strong>
+
+                    <div class="text-muted small">
+                      {{ recensione.prenotazione.lotto.prodotto.nome }} · {{ recensione.data_inserimento|date:'d/m/Y' }}
+                    </div>
+                  </div>
+
+                  <span class="badge text-bg-success">{{ recensione.voto }}/5</span>
+                </div>
+
+                {% if recensione.commento %}
+                  <p class="mb-0 small">{{ recensione.commento }}</p>
+                {% else %}
+                  <p class="mb-0 small text-muted">Valutazione senza commento.</p>
+                {% endif %}
+              </div>
+            {% empty %}
+              <p class="text-muted mb-0">Nessuna recensione disponibile per questa mensa.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </article>
+    </div>
+  {% empty %}
+    <div class="col-12">
+      <div class="alert alert-info">
+        Non sono ancora presenti recensioni.
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('[data-auto-review-filter]').forEach(function (form) {
+    form.querySelectorAll('select').forEach(function (field) {
+      field.addEventListener('change', function () {
+        form.submit();
+      });
+    });
+  });
+});
+</script>
+{% endblock %}
