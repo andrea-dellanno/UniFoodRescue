@@ -1,8 +1,10 @@
 # UniFood Rescue
 
-**UniFood Rescue** è una web application sviluppata con **Django** per gestire il recupero degli alimenti invenduti nelle mense universitarie.
+**UniFood Rescue** è una web application sviluppata con **Django** per supportare il recupero degli alimenti invenduti nelle mense universitarie.
 
-L'obiettivo è permettere agli operatori mensa di pubblicare lotti alimentari e agli studenti di consultarli, filtrarli, prenotarli e ritirarli in una fascia oraria stabilita.
+L’applicazione permette agli operatori mensa di pubblicare lotti alimentari disponibili e agli studenti di consultarli, filtrarli, prenotarli e ritirarli entro una fascia oraria stabilita.
+
+---
 
 ## Tecnologie utilizzate
 
@@ -16,13 +18,11 @@ Il progetto è stato realizzato con:
 - Bootstrap
 - django-axes
 
-Il database utilizzato è **SQLite**, quindi non è necessario installare MySQL, PostgreSQL o altri server database esterni.
+Il progetto utilizza **SQLite** come database locale. Non è quindi necessario installare o configurare server database esterni come MySQL o PostgreSQL.
 
 ---
 
 ## Struttura generale del progetto
-
-La struttura principale del progetto è la seguente:
 
 ```txt
 UniFoodRescue/
@@ -51,13 +51,11 @@ UniFoodRescue/
 
 ## Requisiti per l’esecuzione
 
-Per eseguire il progetto in locale servono:
-
-- Python 3 installato;
+- Python 3;
 - pip;
 - Git;
 - un editor, ad esempio PyCharm o Visual Studio Code;
-- un terminale, ad esempio PowerShell o Prompt dei comandi.
+- un terminale, ad esempio PowerShell, Prompt dei comandi, terminale Linux oppure WSL.
 
 ---
 
@@ -95,7 +93,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Per essere sicuri di essere nell'ambiente virtuale, nel terminale dovrebbe esserci:
+Se l’ambiente virtuale è attivo, nel terminale dovrebbe comparire:
 
 ```txt
 (.venv)
@@ -105,7 +103,7 @@ Per essere sicuri di essere nell'ambiente virtuale, nel terminale dovrebbe esser
 
 ### 3. Installare le dipendenze
 
-Con l’ambiente virtuale attivo, installare le librerie necessarie:
+Con l’ambiente virtuale attivo, installare le librerie richieste dal progetto:
 
 ```bash
 pip install -r requirements.txt
@@ -113,27 +111,40 @@ pip install -r requirements.txt
 
 ---
 
-### 4. Applicare le migrazioni
+### 4. Preparare il database
 
-Per creare o aggiornare la struttura del database:
+Il progetto viene consegnato con il database SQLite già popolato:
+
+```txt
+db.sqlite3
+```
+
+Il file contiene le tabelle del progetto, i dati di prova e i trigger SQL già applicati.
+
+È comunque possibile eseguire:
 
 ```bash
 python manage.py migrate
 ```
 
-Le migrazioni Django creano sia le tabelle dell’applicazione sia i trigger SQL utilizzati dal progetto.
+per verificare che tutte le migrazioni risultino applicate correttamente.
+
+Importante: il file `db.sqlite3` deve essere incluso nella consegna o nella repository.  
+Se si usa GitHub, assicurarsi che `db.sqlite3` non sia escluso dal file `.gitignore`.
 
 ---
 
 ### 5. Creare un superutente
 
-Per accedere al pannello di amministrazione:
+Se si vuole creare un nuovo account amministratore per il pannello Django Admin:
 
 ```bash
 python manage.py createsuperuser
 ```
 
-Verranno richiesti username, email e password.
+Durante l’esecuzione verranno richiesti username, email e password.
+
+Se il database consegnato contiene già utenti di prova, questo passaggio può non essere necessario.
 
 ---
 
@@ -167,32 +178,68 @@ Il progetto utilizza il file:
 db.sqlite3
 ```
 
-SQLite non richiede un server separato: il database è contenuto direttamente in un file locale.
+SQLite salva il database direttamente in un file locale del progetto, quindi non richiede l’avvio di un servizio separato.
 
-Se `db.sqlite3` è già presente nel progetto, sono disponibili anche eventuali dati di prova.  
-Se il file non è presente, può essere ricreato tramite:
+Il database consegnato contiene già i dati necessari per provare il funzionamento dell’applicazione.
+
+Alcuni aggiornamenti sugli stati vengono eseguiti automaticamente tramite trigger SQL.
+
+Gli aggiornamenti che dipendono solo dal passare del tempo vengono invece gestiti dalla logica applicativa, perché i trigger SQL vengono eseguiti solo in seguito a operazioni sul database come `INSERT`, `UPDATE` o `DELETE`.
+
+---
+
+## Verifica del database
+
+Per controllare che il database sia presente e leggibile, aprire la shell SQLite tramite Django:
 
 ```bash
-python manage.py migrate
+python manage.py dbshell
 ```
-Alcuni stati vengono aggiornati automaticamente tramite trigger SQL.
 
-Gli aggiornamenti che dipendono soltanto dal passare del tempo vengono invece gestiti dalla logica applicativa, perché i trigger SQL si attivano solo quando avviene un’operazione sul database, come `INSERT`, `UPDATE` o `DELETE`.
+Dentro la shell SQLite eseguire:
+
+```sql
+SELECT name
+FROM sqlite_master
+WHERE type = 'table'
+ORDER BY name;
+```
+
+Dovrebbero comparire le tabelle dell’applicazione `mensa` e le tabelle interne di Django, ad esempio:
+
+```txt
+mensa_utente
+mensa_mensa
+mensa_lottoinvenduto
+mensa_prenotazione
+mensa_ritiro
+mensa_recensionemensa
+mensa_segnalazione
+django_migrations
+django_session
+django_admin_log
+```
+
+Per uscire dalla shell SQLite:
+
+```sql
+.exit
+```
 
 ---
 
 ## Trigger SQL
 
-Il progetto include trigger SQL definiti tramite migrazioni Django.
+Il progetto include trigger SQL creati tramite migrazioni Django.
 
-I trigger sono stati inseriti per spostare alcune regole automatiche dal codice Python al database. In questo modo il database non si limita a salvare i dati, ma controlla direttamente alcune regole di consistenza.
+I trigger sono stati usati per spostare nel database alcune regole automatiche importanti. In questo modo alcune operazioni non dipendono solo dal codice Python, ma vengono controllate direttamente dal database.
 
 I trigger principali riguardano:
 
-- validazione dei dati di un lotto prima dell’inserimento;
-- validazione dei dati di un lotto prima dell’aggiornamento;
-- blocco del ritorno a disponibile per lotti già scaduti;
-- passaggio automatico a esaurito quando la quantità disponibile diventa zero;
+- controllo dei dati di un lotto prima dell’inserimento;
+- controllo dei dati di un lotto prima dell’aggiornamento;
+- blocco del ritorno allo stato disponibile per lotti già scaduti;
+- passaggio automatico allo stato `esaurito` quando la quantità disponibile arriva a zero;
 - controllo della prenotazione prima dell’inserimento;
 - decremento automatico della quantità disponibile dopo una prenotazione;
 - blocco della modifica di lotto o quantità in una prenotazione già creata;
@@ -246,28 +293,31 @@ Per uscire dalla shell SQLite:
 
 ### Prenotazione di un lotto
 
-Quando uno studente prenota una porzione, Django salva la prenotazione.  
-Subito dopo, un trigger SQL decrementa la quantità disponibile del lotto.
+Quando uno studente prenota una porzione, Django registra la prenotazione nel database.
+
+Dopo il salvataggio, un trigger SQL aggiorna automaticamente la quantità disponibile del lotto.
 
 Esempio:
 
 ```txt
-quantità disponibile iniziale: 4
+quantità disponibile prima: 4
 quantità prenotata: 1
-quantità disponibile finale: 3
+quantità disponibile dopo: 3
 ```
+
 ---
+
 ## Problemi comuni
 
 ### Python non trovato
 
-Se su Windows compare un errore simile a:
+Su Windows potrebbe comparire un errore simile a:
 
 ```txt
 Python non è stato trovato
 ```
 
-provare a usare:
+In questo caso provare a usare:
 
 ```bash
 py manage.py runserver
@@ -283,15 +333,15 @@ oppure verificare che l’ambiente virtuale sia attivo:
 
 ### Antivirus o Avast blocca SQLite
 
-Durante l’uso di SQLite, alcuni antivirus possono mostrare un avviso relativo a `sqlite3.exe` o a `db.sqlite3`.
+Durante l’uso di SQLite, alcuni antivirus possono mostrare un avviso relativo a `sqlite3.exe` o al file `db.sqlite3`.
 
-In quel caso è necessario consentire l’applicazione o aggiungere la cartella del progetto alle eccezioni.
-
-Questo può succedere usando:
+Questo può accadere usando:
 
 ```bash
 python manage.py dbshell
 ```
+
+In questo caso è possibile consentire l’applicazione oppure aggiungere la cartella del progetto tra le eccezioni dell’antivirus.
 
 ---
 
@@ -345,6 +395,15 @@ Accesso alla shell del database:
 python manage.py dbshell
 ```
 
+Controllo tabelle:
+
+```sql
+SELECT name
+FROM sqlite_master
+WHERE type = 'table'
+ORDER BY name;
+```
+
 Controllo trigger:
 
 ```sql
@@ -361,13 +420,12 @@ ORDER BY name;
 Per avviare il progetto da zero:
 
 ```bash
-git clone <URL_DELLA_REPOSITORY>
+git clone https://github.com/andrea-dellanno/UniFoodRescue.git
 cd UniFoodRescue
 py -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py createsuperuser
 python manage.py runserver
 ```
 
