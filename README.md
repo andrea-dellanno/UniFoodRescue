@@ -68,7 +68,7 @@ Per eseguire il progetto in locale servono:
 Aprire il terminale nella cartella in cui si vuole scaricare il progetto ed eseguire:
 
 ```bash
-git clone <URL_DELLA_REPOSITORY>
+git clone https://github.com/andrea-dellanno/UniFoodRescue.git
 ```
 
 Entrare poi nella cartella del progetto:
@@ -95,7 +95,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Quando l’ambiente virtuale è attivo, nel terminale compare:
+Per essere sicuri di essere nell'ambiente virtuale, nel terminale dovrebbe esserci:
 
 ```txt
 (.venv)
@@ -175,62 +175,6 @@ Se il file non è presente, può essere ricreato tramite:
 ```bash
 python manage.py migrate
 ```
-
----
-
-## Ruoli utente
-
-Il sistema distingue due ruoli.
-
-### Studente
-
-Lo studente può:
-
-- consultare il catalogo dei lotti disponibili;
-- prenotare una o più porzioni;
-- visualizzare le proprie prenotazioni;
-- annullare prenotazioni ancora attive;
-- lasciare recensioni;
-- aprire segnalazioni.
-
-### Operatore mensa
-
-L’operatore mensa può:
-
-- creare nuovi lotti alimentari;
-- gestire i lotti della propria mensa;
-- controllare le prenotazioni ricevute;
-- registrare il ritiro di una prenotazione;
-- indicare l’esito del ritiro.
-
----
-
-## Stati gestiti dal sistema
-
-### Stati dei lotti
-
-Un lotto può trovarsi in uno dei seguenti stati:
-
-```txt
-disponibile
-esaurito
-scaduto
-chiuso
-annullato
-```
-
-### Stati delle prenotazioni
-
-Una prenotazione può trovarsi in uno dei seguenti stati:
-
-```txt
-attiva
-annullata
-ritirata
-non_ritirata
-scaduta
-```
-
 Alcuni stati vengono aggiornati automaticamente tramite trigger SQL.
 
 Gli aggiornamenti che dipendono soltanto dal passare del tempo vengono invece gestiti dalla logica applicativa, perché i trigger SQL si attivano solo quando avviene un’operazione sul database, come `INSERT`, `UPDATE` o `DELETE`.
@@ -312,69 +256,7 @@ quantità disponibile iniziale: 4
 quantità prenotata: 1
 quantità disponibile finale: 3
 ```
-
 ---
-
-### Lotto esaurito
-
-Se dopo una prenotazione la quantità disponibile arriva a zero, un trigger imposta automaticamente lo stato del lotto a:
-
-```txt
-esaurito
-```
-
----
-
-### Annullamento di una prenotazione
-
-Quando una prenotazione attiva viene annullata, un trigger restituisce la quantità prenotata al lotto.
-
-Esempio:
-
-```txt
-quantità disponibile prima dell’annullamento: 3
-quantità annullata: 1
-quantità disponibile dopo l’annullamento: 4
-```
-
----
-
-### Ritiro di una prenotazione
-
-Quando l’operatore registra un ritiro, un trigger aggiorna automaticamente lo stato della prenotazione in base all’esito:
-
-```txt
-consegnato       → ritirata
-non_consegnato   → non_ritirata
-annullato        → annullata
-```
-
----
-
-## Note sulla progettazione
-
-Nel modello concettuale sono state eliminate alcune ridondanze non necessarie, preferendo chiavi naturali dove possibile.
-
-Esempi:
-
-- l’utente può essere identificato dalla mail;
-- lo studente può essere identificato dalla matricola;
-- il lotto può essere identificato da un codice lotto;
-- il prodotto alimentare può essere identificato dal nome;
-- l’allergene può essere identificato dal nome.
-
-Alcuni attributi sono invece mantenuti anche se in parte derivabili, perché utili all’applicazione.
-
-Esempi:
-
-- `quantita_disponibile`;
-- `stato` del lotto;
-- `stato` della prenotazione.
-
-Questi valori rendono più semplice e veloce la consultazione del sistema e vengono mantenuti coerenti attraverso trigger SQL e logica applicativa.
-
----
-
 ## Problemi comuni
 
 ### Python non trovato
