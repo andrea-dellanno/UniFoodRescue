@@ -128,10 +128,6 @@ python manage.py migrate
 ```
 
 per verificare che tutte le migrazioni risultino applicate correttamente.
-
-Importante: il file `db.sqlite3` deve essere incluso nella consegna o nella repository.  
-Se si usa GitHub, assicurarsi che `db.sqlite3` non sia escluso dal file `.gitignore`.
-
 ---
 
 ### 5. Creare un superutente
