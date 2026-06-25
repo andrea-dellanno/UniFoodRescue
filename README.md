@@ -121,13 +121,12 @@ db.sqlite3
 
 Il file contiene le tabelle del progetto, i dati di prova e i trigger SQL già applicati.
 
-È comunque possibile eseguire:
+È comunque possibile eseguire per verificare che tutte le migrazioni risultino applicate correttamente:
 
 ```bash
 python manage.py migrate
 ```
 
-per verificare che tutte le migrazioni risultino applicate correttamente.
 ---
 
 ### 5. Creare un superutente
