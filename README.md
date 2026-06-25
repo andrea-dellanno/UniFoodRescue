@@ -113,7 +113,7 @@ pip install -r requirements.txt
 
 ### 4. Preparare il database
 
-Il progetto viene consegnato con il database SQLite già popolato:
+Nel progetto è gia presente il database SQLite già popolato:
 
 ```txt
 db.sqlite3
