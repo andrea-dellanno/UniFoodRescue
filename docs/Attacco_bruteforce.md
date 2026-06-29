@@ -33,7 +33,3 @@ Dunque se tra i parametri di lockout scegliamo di inserire anche indirizzo ip qu
 Allora servirà un reset completo-->                         python manage.py axes_reset
 
 sbloccando così l'indirizzo ip associato alla macchina in cui è stato superato il limite di login, nel nostro caso l'indirizzo localhost di loopback 127.0.0.8
-
-## Integrità
-
-Le prenotazioni usano `transaction.atomic()` e `select_for_update()` per garantire coerenza e uniformità ed evitare overbooking dei lotti.
