@@ -12,10 +12,8 @@ Il progetto è stato realizzato con:
 
 - Python 3
 - Django
-- SQLite
+- SQLite/
 - HTML
-- CSS
-- Bootstrap
 - django-axes
 
 Il progetto utilizza **SQLite** come database locale. Non è quindi necessario installare o configurare server database esterni come MySQL o PostgreSQL.
