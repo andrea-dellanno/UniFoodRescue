@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Ritiri da confermare · UniFood Rescue{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
+  <div>
+    <h1 class="h3 mb-1">Ritiri da confermare</h1>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0 operator-table">
+      <thead>
+        <tr>
+          <th>Codice</th>
+          <th>Prodotto</th>
+          <th>Studente</th>
+          <th>Quantità</th>
+          <th>Fascia ritiro</th>
+          <th>Stato</th>
+          <th class="text-end">Azione</th>
+        </tr>
+      </thead>
+
+      <tbody>
+      {% for p in prenotazioni %}
+        <tr>
+          <td class="text-nowrap">
+            <span class="badge text-bg-light text-dark code-badge" title="Codice lotto">
+              L-{{ p.lotto.pk|stringformat:"04d" }}
+            </span>
+          </td>
+
+          <td class="operator-product-cell">
+            <span class="fw-semibold">{{ p.lotto.prodotto.nome }}</span>
+          </td>
+
+          <td class="operator-product-cell">
+            {{ p.studente.utente.get_full_name|default:p.studente.utente.username }}
+            <span class="text-muted small d-block">Matricola {{ p.studente.matricola }}</span>
+          </td>
+
+          <td class="text-nowrap">
+            {{ p.quantita }}
+          </td>
+
+          <td class="text-nowrap">
+            {{ p.lotto.data_scadenza|date:'d/m/Y' }}
+            <span class="text-muted small">
+              {{ p.lotto.ora_inizio_ritiro|time:'H:i' }}-{{ p.lotto.ora_fine_ritiro|time:'H:i' }}
+            </span>
+          </td>
+
+          <td class="text-nowrap">
+            {% if p.stato_interfaccia == 'programmata' %}
+              <span class="d-inline-flex align-items-center gap-2 text-primary">
+  <span class="d-inline-block rounded-circle bg-primary" style="width: 8px; height: 8px;"></span>
+  Ritiro programmato
+</span>
+            {% elif p.stato_interfaccia == 'pronta' %}
+              <span class="badge text-bg-light border border-success text-success">
+                Pronta da ritirare
+              </span>
+            {% else %}
+              <span class="badge text-bg-secondary">
+                Da verificare
+              </span>
+            {% endif %}
+          </td>
+
+          <td class="text-end text-nowrap">
+            {% if p.stato_interfaccia == 'pronta' %}
+              <form method="post" action="{% url 'conferma_ritiro' p.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button class="btn btn-success btn-sm" type="submit">
+                  Segna Ritirata
+                </button>
+              </form>
+            {% else %}
+              <button class="btn btn-outline-secondary btn-sm" type="button" disabled>
+                Non ancora
+              </button>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7" class="text-muted">
+            Non ci sono ritiri da confermare.
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

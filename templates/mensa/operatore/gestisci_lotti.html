@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}Lotti pubblicati{% endblock %}
+
+{% block content %}
+
+<style>
+  .operator-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    line-height: 1.15;
+  }
+
+  .operator-actions a,
+  .operator-actions button {
+    display: inline;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    text-decoration: none;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+
+  .operator-actions a:hover,
+  .operator-actions button:hover {
+    text-decoration: underline;
+  }
+
+  .operator-action-edit {
+    color: #4db5ff;
+  }
+
+  .operator-action-delete {
+    color: #ff6b7a;
+  }
+
+  .operator-action-disabled {
+    color: #8a8f98;
+    font-size: 0.82rem;
+  }
+
+  .operator-actions form {
+    margin: 0;
+    padding: 0;
+  }
+
+  .operator-actions-cell {
+    width: 90px;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  .operator-table th,
+  .operator-table td {
+    vertical-align: middle;
+  }
+
+  .lotto-code {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .lotto-subtitle {
+    font-size: 0.85rem;
+    color: #6c757d;
+  }
+
+  .status-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .status-dot::before {
+    content: "";
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    display: inline-block;
+  }
+
+  .status-disponibile {
+    color: #198754;
+  }
+
+  .status-disponibile::before {
+    background: #198754;
+  }
+
+  .status-esaurito {
+    color: #dc3545;
+  }
+
+  .status-esaurito::before {
+    background: #dc3545;
+  }
+
+  .status-scaduto {
+    color: #6c757d;
+  }
+
+  .status-scaduto::before {
+    background: #6c757d;
+  }
+
+  .status-chiuso {
+    color: #fd7e14;
+  }
+
+  .status-chiuso::before {
+    background: #fd7e14;
+  }
+
+  .status-annullato {
+    color: #6f42c1;
+  }
+
+  .status-annullato::before {
+    background: #6f42c1;
+  }
+</style>
+
+<section class="mb-4">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+    <div>
+      <p class="text-success fw-semibold mb-2">Area operatore mensa</p>
+      <h1 class="h3 fw-bold mb-1">Lotti pubblicati</h1>
+    </div>
+
+    <div>
+      <a href="{% url 'crea_lotto' %}" class="btn btn-success">
+        Pubblica nuovo lotto
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Totali</div>
+        <div class="h4 fw-bold mb-0">{{ stats.totali }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Disponibili</div>
+        <div class="h4 fw-bold text-success mb-0">{{ stats.disponibili }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Esauriti</div>
+        <div class="h4 fw-bold text-danger mb-0">{{ stats.esauriti }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small">Scaduti</div>
+        <div class="h4 fw-bold text-secondary mb-0">{{ stats.scaduti }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table operator-table align-middle mb-0">
+        <thead>
+          <tr>
+            <th class="ps-4">Codice Lotto</th>
+            <th>Prodotto</th>
+            <th>Quantità</th>
+            <th>Ritiro</th>
+            <th>Stato</th>
+            <th class="operator-actions-cell">Azioni</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for lotto in lotti %}
+            <tr>
+              <td class="ps-4">
+                <div class="lotto-code">L-{{ lotto.id|stringformat:"04d" }}</div>
+              </td>
+
+              <td>
+                <div class="fw-semibold">{{ lotto.prodotto.nome }}</div>
+              </td>
+
+              <td>
+                <div class="fw-semibold">
+                  {{ lotto.quantita_disponibile }} / {{ lotto.quantita_iniziale }}
+                </div>
+                <div class="lotto-subtitle"> disponibili</div>
+              </td>
+
+              <td>
+                <div class="fw-semibold">
+                  {{ lotto.data_scadenza|date:"d/m/Y" }}
+                </div>
+                <div class="lotto-subtitle">
+                  {{ lotto.ora_inizio_ritiro|time:"H:i" }} - {{ lotto.ora_fine_ritiro|time:"H:i" }}
+                </div>
+              </td>
+
+              <td>
+                {% if lotto.stato == 'disponibile' %}
+                  <span class="status-dot status-disponibile">{{ lotto.get_stato_display }}</span>
+                {% elif lotto.stato == 'esaurito' %}
+                  <span class="status-dot status-esaurito">{{ lotto.get_stato_display }}</span>
+                {% elif lotto.stato == 'scaduto' %}
+                  <span class="status-dot status-scaduto">{{ lotto.get_stato_display }}</span>
+                {% elif lotto.stato == 'chiuso' %}
+                  <span class="status-dot status-chiuso">{{ lotto.get_stato_display }}</span>
+                {% elif lotto.stato == 'annullato' %}
+                  <span class="status-dot status-annullato">{{ lotto.get_stato_display }}</span>
+                {% else %}
+                  <span class="status-dot status-scaduto">{{ lotto.get_stato_display }}</span>
+                {% endif %}
+              </td>
+
+              <td class="operator-actions-cell">
+                <div class="operator-actions">
+                  <a href="{% url 'modifica_lotto' lotto.id %}" class="operator-action-edit">
+                    Modifica
+                  </a>
+
+                  {% if lotto.stato != 'chiuso' %}
+                    <form method="post" action="{% url 'chiudi_lotto' lotto.id %}">
+                      {% csrf_token %}
+                      <button
+                        type="submit"
+                        class="operator-action-delete"
+                        onclick="return confirm('Vuoi rimuovere questo lotto dai lotti disponibili?');"
+                      >
+                        Elimina
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-5">
+                <div class="fw-semibold mb-1">Nessun lotto pubblicato</div>
+                <div class="text-muted mb-3">
+                  Quando pubblicherai un lotto, comparirà in questa tabella.
+                </div>
+                <a href="{% url 'crea_lotto' %}" class="btn btn-success">
+                  Pubblica primo lotto
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

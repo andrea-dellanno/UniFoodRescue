@@ -1,0 +1,134 @@
+{% load static %}
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}UniFood Rescue{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{% static 'css/site.css' %}" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold me-4" href="{% url 'home' %}">
+      {% if user.is_authenticated and user.is_operatore_mensa %}
+        UniFood Rescue · Area mensa
+      {% else %}
+        UniFood Rescue
+      {% endif %}
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarUniFood" aria-controls="navbarUniFood" aria-expanded="false" aria-label="Apri menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarUniFood">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center">
+
+        {% if user.is_authenticated and user.is_operatore_mensa %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'gestisci_lotti' %}">Lotti pubblicati</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'prenotazioni_da_ritirare' %}">Ritiri da confermare</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'storico_ritiri_operatore' %}">Storico ritiri</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'recensioni_mense' %}">Recensioni mense</a>
+          </li>
+
+          <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+            <a class="btn btn-light btn-sm fw-semibold" href="{% url 'crea_lotto' %}">Pubblica lotto</a>
+          </li>
+
+        {% else %}
+
+          {% if user.is_authenticated and user.is_studente %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'mie_prenotazioni' %}">Le mie prenotazioni</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'mie_recensioni' %}">Le mie recensioni</a>
+            </li>
+          {% endif %}
+
+          {% if user.is_authenticated and user.is_amministratore_app %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'catalogo_lotti' %}">Catalogo lotti</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'dashboard_amministratore' %}">Amministrazione</a>
+            </li>
+          {% endif %}
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'recensioni_mense' %}">Recensioni mense</a>
+          </li>
+
+        {% endif %}
+      </ul>
+
+      <div class="d-flex align-items-center gap-3 ms-lg-4">
+        {% if user.is_authenticated %}
+          <span class="navbar-text text-white small d-none d-lg-inline">
+            {{ user.username }} · {{ user.get_ruolo_display }}
+          </span>
+
+          <form method="post" action="{% url 'logout' %}" class="m-0">
+            {% csrf_token %}
+            <button class="btn btn-outline-light btn-sm" type="submit">Esci</button>
+          </form>
+        {% else %}
+          <a class="btn btn-outline-light btn-sm" href="{% url 'login' %}">Accedi</a>
+          <a class="btn btn-light btn-sm" href="{% url 'registrazione' %}">Registrati</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Chiudi"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</main>
+
+
+  <div class="container small text-muted">
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-2">
+
+      <div class="d-flex flex-wrap gap-3">
+        {% if user.is_authenticated and user.is_operatore_mensa %}
+          <a class="text-muted text-decoration-none" href="{% url 'crea_lotto' %}">Pubblica lotto</a>
+          <a class="text-muted text-decoration-none" href="{% url 'prenotazioni_da_ritirare' %}">Ritiri</a>
+        {% endif %}
+
+        {% if not user.is_authenticated %}
+          <a class="text-muted text-decoration-none" href="{% url 'login' %}">Accedi</a>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

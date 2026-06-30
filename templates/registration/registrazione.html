@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Crea account · UniFood Rescue{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7 col-xl-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-4 p-lg-5">
+        <div class="mb-4">
+          <p class="text-success fw-semibold mb-2">Area studenti</p>
+          <h1 class="h3 mb-2">Registrazione</h1>
+        </div>
+
+        <p class="small text-muted mb-3">
+          I campi contrassegnati con <span class="text-danger">*</span> sono obbligatori.
+        </p>
+
+        <form method="post">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {{ form.non_field_errors }}
+            </div>
+          {% endif %}
+
+          <div class="row g-3">
+            {% for field in form %}
+              <div class="{% if field.name == 'email' or field.name == 'username' or field.name == 'password1' or field.name == 'password2' %}col-12{% else %}col-md-6{% endif %}">
+                <label class="form-label" for="{{ field.id_for_label }}">
+                  {{ field.label }}
+                  {% if field.field.required %}
+                    <span class="text-danger">*</span>
+                  {% endif %}
+                </label>
+
+                {{ field }}
+
+                {% if field.help_text %}
+                  <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+
+                {% for error in field.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+
+          <button class="btn btn-success w-100 mt-4" type="submit">
+            Crea account
+          </button>
+        </form>
+
+        <p class="small text-muted text-center mt-4 mb-0">
+          Hai già un account?
+          <a href="{% url 'login' %}">Accedi</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

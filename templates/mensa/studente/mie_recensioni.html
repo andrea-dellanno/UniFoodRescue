@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Le mie recensioni · UniFood Rescue{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h3 mb-1">Le mie recensioni</h1>
+  </div>
+
+  <a class="btn btn-outline-success" href="{% url 'mie_prenotazioni' %}">
+    Torna alle prenotazioni
+  </a>
+</div>
+
+<div class="row g-3">
+  {% for recensione in recensioni %}
+    <div class="col-md-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <div>
+              <h2 class="h5 mb-1">{{ recensione.mensa.nome }}</h2>
+              <div class="text-muted small">
+                {{ recensione.prenotazione.lotto.prodotto.nome }} · {{ recensione.data_inserimento|date:'d/m/Y H:i' }}
+              </div>
+            </div>
+
+            <span class="badge text-bg-success">
+              {{ recensione.voto }}/5
+            </span>
+          </div>
+
+          {% if recensione.commento %}
+            <p class="mb-0">{{ recensione.commento }}</p>
+          {% else %}
+            <p class="text-muted mb-0">Nessun commento inserito.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="col-12">
+      <div class="alert alert-info">
+        Non hai ancora lasciato recensioni. Potrai recensire una mensa dopo un ritiro completato.
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

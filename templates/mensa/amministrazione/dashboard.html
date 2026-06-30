@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% block title %}Amministrazione · UniFood Rescue{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <p class="text-success fw-semibold mb-1">Amministrazione</p>
+    <h1 class="h3 mb-1">Panoramica servizio</h1>
+    <p class="text-muted mb-0">Statistiche operative su lotti, prenotazioni, ritiri e segnalazioni.</p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="h3 mb-0">{{ stats.lotti_disponibili|default:0 }}</div>
+        <div class="text-muted small">Lotti disponibili</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="h3 mb-0">{{ stats.porzioni_disponibili|default:0 }}</div>
+        <div class="text-muted small">Porzioni disponibili</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="h3 mb-0">{{ stats.porzioni_ritirate|default:0 }}</div>
+        <div class="text-muted small">Porzioni ritirate</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="h3 mb-0">{{ stats.tasso_ritiro|default:0 }}%</div>
+        <div class="text-muted small">Tasso di ritiro</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="h3 mb-0">{{ stats.lotti_scaduti|default:0 }}</div>
+        <div class="text-muted small">Lotti scaduti</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="h3 mb-0">{{ stats.prenotazioni_non_ritirate|default:0 }}</div>
+        <div class="text-muted small">Prenotazioni non ritirate</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="h3 mb-0">{{ stats.segnalazioni_aperte|default:0 }}</div>
+        <div class="text-muted small">Segnalazioni aperte</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="h3 mb-0">{{ stats.voto_medio|default:0|floatformat:1 }}/5</div>
+        <div class="text-muted small">Voto medio mense</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <a class="card card-body text-decoration-none shadow-sm border-0 h-100" href="{% url 'admin_mensa_list' %}">
+      <strong>Mense</strong>
+      <span class="text-muted small">Gestione mense</span>
+    </a>
+  </div>
+
+  <div class="col-md-3">
+    <a class="card card-body text-decoration-none shadow-sm border-0 h-100" href="{% url 'admin_categoria_list' %}">
+      <div class="text-center mt-2">
+  <strong>Categorie Prodotti</strong>
+</div>
+    </a>
+  </div>
+
+  <div class="col-md-3">
+    <a class="card card-body text-decoration-none shadow-sm border-0 h-100" href="{% url 'admin_allergene_list' %}">
+      <strong>Allergeni</strong>
+      <span class="text-muted small">Archivio allergeni</span>
+    </a>
+  </div>
+
+  <div class="col-md-3">
+    <a class="card card-body text-decoration-none shadow-sm border-0 h-100" href="{% url 'admin_prodotto_list' %}">
+      <strong>Prodotti</strong>
+      <span class="text-muted small">Catalogo alimenti</span>
+    </a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-header bg-white">
+        <strong>Porzioni ritirate per mensa</strong>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>Mensa</th>
+              <th>Porzioni</th>
+            </tr>
+          </thead>
+
+          <tbody>
+          {% for r in recupero %}
+            <tr>
+              <td>{{ r.lotto__mensa__nome }}</td>
+              <td>{{ r.porzioni }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="2" class="text-muted">Nessun ritiro registrato.</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-header bg-white">
+        <strong>Prodotti più prenotati</strong>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>Prodotto</th>
+              <th>Porzioni prenotate</th>
+            </tr>
+          </thead>
+
+          <tbody>
+          {% for p in prodotti_piu_prenotati %}
+            <tr>
+              <td>{{ p.lotto__prodotto__nome }}</td>
+              <td>{{ p.porzioni }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="2" class="text-muted">Nessuna prenotazione presente.</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0 mt-4">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <strong>Segnalazioni recenti</strong>
+    <a href="{% url 'gestione_segnalazioni' %}" class="btn btn-outline-success btn-sm">Gestisci</a>
+  </div>
+
+  <div class="list-group list-group-flush">
+    {% for s in segnalazioni %}
+      <a class="list-group-item list-group-item-action" href="{% url 'gestisci_segnalazione' s.pk %}">
+        <div class="d-flex justify-content-between gap-3">
+          <strong>{{ s.titolo }}</strong>
+          <span class="badge text-bg-secondary">{{ s.get_stato_display }}</span>
+        </div>
+
+        <div class="small text-muted">
+          {{ s.autore.utente.get_full_name|default:s.autore.utente.username }} · {{ s.prenotazione.lotto.mensa.nome }}
+        </div>
+      </a>
+    {% empty %}
+      <div class="list-group-item text-muted">Nessuna segnalazione.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

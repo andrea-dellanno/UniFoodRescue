@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+{% block title %}UniFood Rescue{% endblock %}
+
+{% block content %}
+
+<style>
+  .ufr-primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--ufr-green);
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 0.72rem 1.15rem;
+  border-radius: 7px;
+  line-height: 1.2;
+}
+
+.ufr-primary-action:hover {
+  background-color: var(--ufr-green-dark);
+  color: #ffffff;
+  text-decoration: none;
+}
+  :root {
+  --ufr-green: #2f6b4f;
+  --ufr-green-dark: #285a43;
+  --ufr-green-soft: #eef6f0;
+  --ufr-cream: #f8f6f0;
+  --ufr-border: #ded8cc;
+  --ufr-text: #1f2a24;
+  --ufr-muted: #6f756f;
+}
+
+body {
+  background-color: var(--ufr-cream);
+  color: var(--ufr-text);
+}
+
+.hero {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+  .student-profile-card {
+    background-color: var(--ufr-surface);
+    border: none !important;
+    border-radius: 10px;
+    box-shadow: none !important;
+  }
+
+.card {
+  border-radius: 10px;
+}
+
+
+
+.shadow-sm {
+  box-shadow: 0 6px 18px rgba(35, 45, 38, 0.055) !important;
+}
+
+.text-success {
+  color: var(--ufr-green) !important;
+}
+
+.btn-success {
+  background-color: var(--ufr-green);
+  border-color: var(--ufr-green);
+}
+
+.btn-success:hover {
+  background-color: var(--ufr-green-dark);
+  border-color: var(--ufr-green-dark);
+}
+
+.btn-outline-success {
+  color: var(--ufr-green);
+  border-color: var(--ufr-green);
+}
+
+.btn-outline-success:hover {
+  background-color: var(--ufr-green);
+  border-color: var(--ufr-green);
+  color: #ffffff;
+}
+
+.form-select,
+.form-control {
+  border-color: var(--ufr-border);
+}
+
+.form-select:focus,
+.form-control:focus {
+  border-color: var(--ufr-green);
+  box-shadow: 0 0 0 0.15rem rgba(47, 107, 79, 0.16);
+}
+
+.table {
+  --bs-table-bg: #ffffff;
+}
+
+.table thead th {
+  color: #3d463f;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-bottom: 1px solid var(--ufr-border);
+}
+
+.table td {
+  border-color: #eee9df;
+}
+
+  .student-heading-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.45rem;
+  }
+
+  .student-matricola-line {
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+
+  .student-summary-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #253528;
+    margin-bottom: 0.75rem;
+  }
+
+  .student-summary-list {
+    margin: 0;
+    padding: 0;
+  }
+
+  .student-summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid #edf0ed;
+  }
+
+  .student-summary-row:last-child {
+    border-bottom: 0;
+  }
+
+  .student-summary-label {
+    color: #6c757d;
+    font-size: 0.92rem;
+  }
+
+  .student-summary-value {
+    color: #1f3d2b;
+    font-weight: 700;
+    min-width: 2rem;
+    text-align: right;
+  }
+</style>
+
+{% if is_operator_home %}
+<section class="hero py-5 mb-4">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-8">
+        <p class="text-success fw-semibold mb-2">Area operatori mensa</p>
+        <h1 class="display-6 fw-bold mb-3">Gestisci le eccedenze di {{ operatore.mensa.nome }}</h1>
+        <p class="lead text-muted mb-0">
+          Pubblica i lotti disponibili, controlla i ritiri da confermare e aggiorna le disponibilità della tua mensa.
+        </p>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-4">
+            <h2 class="h5 mb-3">Nuove porzioni disponibili?</h2>
+            <a class="btn btn-success btn-lg w-100" href="{% url 'crea_lotto' %}">Pubblica lotto</a>
+            <p class="text-muted small mb-0 mt-3">
+              Il lotto sarà visibile agli studenti appena salvato.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+{% else %}
+
+ <section class="hero py-5 mb-4">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <h1 class="display-5 fw-bold mb-4">
+          Prenota le porzioni disponibili e ritirale in mensa.
+        </h1>
+        <div class="d-flex flex-wrap gap-2 mt-2">
+          {% if is_student_home %}
+           <a class="link-success fw-bold text-decoration-underline fs-5" href="#catalogo-lotti">
+  Vedi i lotti <span class="ms-1">↓</span>
+</a>
+          {% else %}
+            {% if user.is_authenticated %}
+              <a class="btn btn-success btn-lg" href="{% url 'home' %}">Vedi i lotti</a>
+            {% else %}
+              <a class="btn btn-success btn-lg" href="{% url 'login' %}">Vedi i lotti</a>
+            {% endif %}
+          {% endif %}
+
+          {% if not user.is_authenticated %}
+            <a class="btn btn-outline-success btn-lg" href="{% url 'registrazione' %}">Crea account studente</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card border-0 student-profile-card">
+          <div class="card-body p-4">
+            {% if is_student_home %}
+              <p class="text-success fw-semibold mb-1">Area personale</p>
+
+              <div class="student-heading-row mb-1">
+                <h2 class="h4 mb-0">
+                  Ciao, {{ user.first_name|default:user.username }}{% if user.last_name %} {{ user.last_name }}{% endif %}
+                </h2>
+              </div>
+
+              <div class="student-matricola-line mb-4">
+                Profilo studente
+                {% if user.profilo_studente.matricola %}
+                  · Matricola {{ user.profilo_studente.matricola }}
+                {% endif %}
+              </div>
+
+              <div class="student-summary-title">
+                Riepilogo attività
+              </div>
+
+              <div class="student-summary-list">
+                <div class="student-summary-row">
+                  <div class="student-summary-label">Prenotazioni attive</div>
+                  <div class="student-summary-value">{{ student_stats.attive|default:0 }}</div>
+                </div>
+
+                <div class="student-summary-row">
+                  <div class="student-summary-label">Ritiri completati</div>
+                  <div class="student-summary-value">{{ student_stats.ritirate|default:0 }}</div>
+                </div>
+
+                <div class="student-summary-row">
+                  <div class="student-summary-label">Recensioni effettuate</div>
+                  <div class="student-summary-value">{{ student_stats.recensioni|default:0 }}</div>
+                </div>
+            {% else %}
+              <h2 class="h5 mb-3">Disponibilità attuale</h2>
+
+              <div class="row g-3">
+                <div class="col-6">
+                  <div class="border rounded-3 p-3 h-100">
+                    <div class="h4 mb-0">{{ stats.lotti_disponibili|default:0 }}</div>
+                    <div class="text-muted small">Lotti disponibili</div>
+                  </div>
+                </div>
+
+                <div class="col-6">
+                  <div class="border rounded-3 p-3 h-100">
+                    <div class="h4 mb-0">{{ stats.porzioni_disponibili|default:0 }}</div>
+                    <div class="text-muted small">Porzioni disponibili</div>
+                  </div>
+                </div>
+
+                <div class="col-6">
+                  <div class="border rounded-3 p-3 h-100">
+                    <div class="h4 mb-0">{{ stats.mense|default:0 }}</div>
+                    <div class="text-muted small">Mense aderenti</div>
+                  </div>
+                </div>
+
+                <div class="col-6">
+                  <div class="border rounded-3 p-3 h-100">
+                    <div class="h4 mb-0">{{ stats.porzioni_recuperate|default:0 }}</div>
+                    <div class="text-muted small">Porzioni recuperate</div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% if is_student_home %}
+    <div id="catalogo-lotti" class="mb-3">
+      <h2 class="h3 mb-0">Lotti disponibili</h2>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+          <h3 class="h6 mb-0">Filtri</h3>
+
+          {% if has_filters %}
+            <a class="btn btn-outline-secondary btn-sm" href="{{ clear_filters_url }}">
+              Rimuovi filtri
+            </a>
+          {% endif %}
+        </div>
+
+        <form method="get" action="" data-auto-filter-form>
+          <div class="row g-3 align-items-end">
+            <div class="col-md-4 col-lg-3">
+              <label class="form-label" for="home-filtro-categoria">Categoria</label>
+              <select id="home-filtro-categoria" name="categoria" class="form-select">
+                <option value="">Tutte le categorie</option>
+                {% for item in categorie_nav %}
+                  <option value="{{ item.obj.pk }}" {% if item.active %}selected{% endif %}>{{ item.obj.nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4 col-lg-3">
+              <label class="form-label" for="home-filtro-mensa">Mensa</label>
+              <select id="home-filtro-mensa" name="mensa" class="form-select">
+                <option value="">Tutte le mense</option>
+                {% for item in mense_nav %}
+                  <option value="{{ item.obj.pk }}" {% if item.active %}selected{% endif %}>{{ item.obj.nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-4 col-lg-3">
+              <label class="form-label" for="home-filtro-allergene">Escludi allergene</label>
+              <select id="home-filtro-allergene" name="senza_allergene" class="form-select">
+                <option value="">Nessuna esclusione</option>
+                {% for item in allergeni_nav %}
+                  <option value="{{ item.obj.pk }}" {% if item.active %}selected{% endif %}>Senza {{ item.obj.nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+              <label class="form-label d-block">Preferenze</label>
+
+              <div class="d-flex flex-wrap gap-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="home-filtro-vegetariano" name="vegetariano" value="1" {% if vegetariano %}checked{% endif %}>
+                  <label class="form-check-label" for="home-filtro-vegetariano">Vegetariano</label>
+                </div>
+
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="home-filtro-vegano" name="vegano" value="1" {% if vegano %}checked{% endif %}>
+                  <label class="form-check-label" for="home-filtro-vegano">Vegano</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      {% for lotto in lotti %}
+        {% include 'mensa/partials/lotto_card.html' with lotto=lotto %}
+      {% empty %}
+        <div class="col-12">
+          <div class="alert alert-info mb-0">
+            Nessun lotto disponibile con i filtri selezionati.
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-auto-filter-form]').forEach(function (form) {
+      form.querySelectorAll('select, input[type="checkbox"]').forEach(function (field) {
+        field.addEventListener('change', function () {
+          form.submit();
+        });
+      });
+    });
+  });
+  </script>
+
+{% endif %}
+
+{% endblock %}

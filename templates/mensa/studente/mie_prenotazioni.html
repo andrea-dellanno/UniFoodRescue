@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+
+{% block title %}Le mie prenotazioni · UniFood Rescue{% endblock %}
+
+{% block content %}
+<style>
+  .azioni-prenotazione {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 115px;
+  }
+
+  .azione-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 105px;
+    min-height: 24px;
+    padding: 4px 8px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.1;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .azione-btn:hover {
+    color: white;
+    text-decoration: none;
+    filter: brightness(0.95);
+  }
+
+.azione-annulla {
+  background-color: #d72638;
+}
+
+.azione-recensisci {
+  background-color: #2bbf8a;
+}
+
+.azione-vedi-recensione {
+  background-color: #168fca;
+}
+  .azione-vuota {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 105px;
+    color: #6c757d;
+    font-weight: 700;
+  }
+</style>
+
+<div class="mb-3">
+  <h1 class="h3 mb-0">Le mie prenotazioni</h1>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th class="ps-4">Prodotto</th>
+            <th>Mensa</th>
+            <th>Codice</th>
+            <th>Quantità</th>
+            <th>Ritiro</th>
+            <th>Stato</th>
+            <th>Azioni</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for p in prenotazioni %}
+            <tr>
+              <td class="ps-4">
+                <div class="fw-semibold">{{ p.lotto.prodotto.nome }}</div>
+                <div class="text-muted small">
+                  Prenotata il {{ p.data_prenotazione|date:"d/m/Y H:i" }}
+                </div>
+              </td>
+
+              <td>
+                {{ p.lotto.mensa.nome }}
+              </td>
+
+              <td>
+                <span class="badge text-bg-light border text-dark">
+                  {{ p.codice_ritiro }}
+                </span>
+              </td>
+
+              <td>
+                {{ p.quantita }}
+              </td>
+
+              <td>
+                <div>
+                  {{ p.lotto.data_scadenza|date:"d/m/Y" }}
+                </div>
+                <div class="text-muted small">
+                  {{ p.lotto.ora_inizio_ritiro|time:"H:i" }} -
+                  {{ p.lotto.ora_fine_ritiro|time:"H:i" }}
+                </div>
+              </td>
+
+              <td>
+                {% if p.stato_interfaccia == 'programmata' %}
+                  <span class="text-primary fw-semibold">
+                    <span class="d-inline-block rounded-circle bg-primary me-1" style="width: 7px; height: 7px;"></span>
+                    Ritiro programmato
+                  </span>
+
+                {% elif p.stato_interfaccia == 'pronta' and p.stato == 'attiva' %}
+                  <span class="text-success fw-semibold">
+                    <span class="d-inline-block rounded-circle bg-success me-1" style="width: 7px; height: 7px;"></span>
+                    Pronta da ritirare
+                  </span>
+
+                {% elif p.stato == 'attiva' %}
+                  <span class="text-success fw-semibold">
+                    <span class="d-inline-block rounded-circle bg-success me-1" style="width: 7px; height: 7px;"></span>
+                    Attiva
+                  </span>
+
+                {% elif p.stato == 'ritirata' %}
+                  <span class="text-success fw-semibold">
+                    <span class="d-inline-block rounded-circle bg-success me-1" style="width: 7px; height: 7px;"></span>
+                    Ritirata
+                  </span>
+
+                {% elif p.stato == 'non_ritirata' %}
+                  <span class="text-danger fw-semibold">
+                    <span class="d-inline-block rounded-circle bg-danger me-1" style="width: 7px; height: 7px;"></span>
+                    Non ritirata
+                  </span>
+
+                {% elif p.stato == 'annullata' %}
+                  <span class="text-secondary fw-semibold">
+                    <span class="d-inline-block rounded-circle bg-secondary me-1" style="width: 7px; height: 7px;"></span>
+                    Annullata
+                  </span>
+
+                {% elif p.stato == 'scaduta' %}
+                  <span class="text-secondary fw-semibold">
+                    <span class="d-inline-block rounded-circle bg-secondary me-1" style="width: 7px; height: 7px;"></span>
+                    Scaduta
+                  </span>
+
+                {% else %}
+                  <span class="text-secondary fw-semibold">
+                    <span class="d-inline-block rounded-circle bg-secondary me-1" style="width: 7px; height: 7px;"></span>
+                    {{ p.get_stato_display }}
+                  </span>
+                {% endif %}
+              </td>
+
+              <td class="text-center">
+  <div class="azioni-prenotazione">
+
+    {% if p.stato == 'attiva' %}
+      <form method="post" action="{% url 'annulla_prenotazione' p.pk %}" class="m-0 p-0">
+        {% csrf_token %}
+        <button
+          type="submit"
+          class="azione-btn azione-annulla"
+          onclick="return confirm('Vuoi annullare questa prenotazione?');"
+        >
+          Annulla
+        </button>
+      </form>
+    {% endif %}
+
+    {% if p.stato == 'ritirata' %}
+      {% if p.recensione %}
+        <a
+          href="{% url 'dettaglio_mia_recensione' p.recensione.pk %}"
+          class="azione-btn azione-vedi-recensione"
+        >
+          Vedi recensione
+        </a>
+      {% else %}
+        <a
+          href="{% url 'crea_recensione' p.pk %}"
+          class="azione-btn azione-recensisci"
+        >
+          Recensisci
+        </a>
+      {% endif %}
+    {% endif %}
+
+    {% if p.stato == 'non_ritirata' or p.stato == 'annullata' or p.stato == 'scaduta' %}
+      <span class="azione-vuota">—</span>
+    {% endif %}
+
+  </div>
+</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-5">
+                <div class="fw-semibold mb-1">Nessuna prenotazione presente</div>
+                <div class="text-muted mb-3">
+                  Quando prenoterai un lotto, lo troverai in questa pagina.
+                </div>
+                <a class="btn btn-success" href="{% url 'catalogo_lotti' %}">
+                  Vai al catalogo
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

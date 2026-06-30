@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block title %}Dettaglio lotto · UniFood Rescue{% endblock %}
+
+{% block content %}
+
+<style>
+  .lotto-detail-page {
+    padding-top: 1.5rem;
+  }
+
+  .lotto-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+  }
+
+  .lotto-subtitle {
+    color: #5f6870;
+    font-size: 1.05rem;
+    margin-bottom: 1.6rem;
+  }
+
+  .lotto-separator {
+    border: 0;
+    border-top: 1px solid #d8dde2;
+    margin: 1.2rem 0 1.4rem;
+  }
+
+  .lotto-description {
+    font-size: 1rem;
+    margin-bottom: 1.6rem;
+  }
+
+  .lotto-info-row {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    align-items: start;
+  }
+
+  .lotto-info-label {
+    font-weight: 700;
+  }
+
+  .lotto-info-value {
+    color: #111827;
+  }
+
+  .lotto-pill {
+    display: inline-block;
+    padding: 0.22rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border: 1px solid #d6dbe0;
+    background: #f7f8f9;
+    margin-right: 0.35rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .lotto-pill-warning {
+    background: #f2c14e;
+    border-color: #e3ad2f;
+    color: #111827;
+  }
+
+  .lotto-actions-area {
+    margin-top: 4.2rem;
+    padding-left: 1.5rem;
+  }
+
+  .lotto-actions-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+  }
+
+  .lotto-action-primary {
+    display: block;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+    padding: 0.85rem 1rem;
+    border-radius: 7px;
+    background: #2f6f55;
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-decoration: none;
+    margin-bottom: 0.8rem;
+  }
+
+  .lotto-action-primary:hover {
+    color: #ffffff;
+    background: #285d48;
+    text-decoration: none;
+  }
+
+  .lotto-action-secondary {
+    display: block;
+    width: 100%;
+    max-width: 330px;
+    text-align: center;
+    padding: 0.72rem 1rem;
+    border-radius: 7px;
+    border: 1px solid #8a949e;
+    color: #4f5963;
+    background: transparent;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    margin-left: 0.6rem;
+  }
+
+  .lotto-action-secondary:hover {
+    color: #111827;
+    border-color: #646d76;
+    text-decoration: none;
+  }
+
+  @media (max-width: 991px) {
+    .lotto-actions-area {
+      margin-top: 2rem;
+      padding-left: 0;
+    }
+
+    .lotto-info-row {
+      grid-template-columns: 1fr;
+      gap: 0.2rem;
+    }
+
+    .lotto-action-primary,
+    .lotto-action-secondary {
+      max-width: 100%;
+      margin-left: 0;
+    }
+  }
+</style>
+
+<div class="lotto-detail-page">
+  <div class="row g-5">
+    <div class="col-lg-7">
+      <h1 class="lotto-title">{{ lotto.prodotto.nome }}</h1>
+
+      <div class="lotto-subtitle">
+        {{ lotto.mensa.nome }}
+        {% if lotto.prodotto.categoria %}
+          · {{ lotto.prodotto.categoria.nome }}
+        {% endif %}
+      </div>
+
+      <hr class="lotto-separator">
+
+      {% if lotto.prodotto.descrizione %}
+        <p class="lotto-description">
+          {{ lotto.prodotto.descrizione }}
+        </p>
+      {% endif %}
+
+      <div class="lotto-info-row">
+        <div class="lotto-info-label">Quantità disponibile</div>
+        <div class="lotto-info-value">
+          {{ lotto.quantita_disponibile }} su {{ lotto.quantita_iniziale }}
+        </div>
+      </div>
+
+      <div class="lotto-info-row">
+        <div class="lotto-info-label">Data scadenza</div>
+        <div class="lotto-info-value">
+          {{ lotto.data_scadenza|date:"d/m/Y" }}
+        </div>
+      </div>
+
+      <div class="lotto-info-row">
+        <div class="lotto-info-label">Fascia ritiro</div>
+        <div class="lotto-info-value">
+          {{ lotto.ora_inizio_ritiro|time:"H:i" }} - {{ lotto.ora_fine_ritiro|time:"H:i" }}
+        </div>
+      </div>
+
+      <div class="lotto-info-row">
+        <div class="lotto-info-label">Prezzo simbolico</div>
+        <div class="lotto-info-value">
+          € {{ lotto.prezzo_simbolico|floatformat:2 }}
+        </div>
+      </div>
+
+      <div class="lotto-info-row">
+        <div class="lotto-info-label">Caratteristiche</div>
+        <div class="lotto-info-value">
+          {% if lotto.prodotto.vegetariano %}
+            <span class="lotto-pill">Vegetariano</span>
+          {% endif %}
+
+          {% if lotto.prodotto.vegano %}
+            <span class="lotto-pill">Vegano</span>
+          {% endif %}
+
+          {% if not lotto.prodotto.vegetariano and not lotto.prodotto.vegano %}
+            <span class="text-muted">Nessuna caratteristica specifica</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="lotto-info-row">
+        <div class="lotto-info-label">Allergeni</div>
+        <div class="lotto-info-value">
+          {% for allergene in lotto.prodotto.allergeni.all %}
+            <span class="lotto-pill lotto-pill-warning">{{ allergene.nome }}</span>
+          {% empty %}
+            <span class="text-muted">Nessun allergene indicato</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="lotto-actions-area">
+        <div class="lotto-actions-title">
+          Vuoi prenotarlo?
+        </div>
+
+        <a class="lotto-action-primary" href="{% url 'prenota_lotto' lotto.pk %}">
+          Prenota questo lotto
+        </a>
+
+        <a class="lotto-action-secondary" href="{% url 'catalogo_lotti' %}">
+          Torna al catalogo
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

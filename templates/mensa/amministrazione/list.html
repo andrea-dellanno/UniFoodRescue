@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load mensa_extras %}
+{% block title %}{{ title }} · UniFood Rescue{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ title }}</h1>
+  </div>
+
+  {% if create_url %}
+    <a class="btn btn-success" href="{% url create_url %}">Aggiungi</a>
+  {% endif %}
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          {% for field in fields %}
+            <th>{{ field|capfirst }}</th>
+          {% endfor %}
+          <th class="text-end">Azioni</th>
+        </tr>
+      </thead>
+
+      <tbody>
+      {% for obj in object_list %}
+        <tr>
+          {% for field in fields %}
+            <td>{{ obj|getattribute:field }}</td>
+          {% endfor %}
+
+          <td class="text-end">
+            {% if delete_url %}
+              <form method="post" action="{% url delete_url obj.pk %}" class="d-inline"
+                    onsubmit="return confirm('Vuoi eliminare questo elemento?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm">Elimina</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="{{ fields|length|add:1 }}" class="text-muted">
+            Nessun elemento presente.
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
